@@ -1,18 +1,21 @@
 # ESMValTool
 # Recipe to calc temporal statistics of models
+# adapted from example python recipe
 ---
 documentation:
   description: |
     Recipe to calculate temporal statistics of supplied datasets
 
+  # Need to setup author and project entries
   authors:
-    - crocker_thomas
+  - andela_bouwe
+  - righi_mattia
 
-  maintainer:
-    - crocker_thomas
+  #maintainer:
+  #  - crocker_thomas
 
-  projects:
-    - EUCP_WP5
+  #projects:
+  #  - EUCP_WP5
 
 datasets:
   - {dataset: CanESM2, project: CMIP5, exp: [historical, rcp85], ensemble: r1i1p1, start_year: 1961, end_year: 2100}
@@ -29,4 +32,4 @@ diagnostics:
       tas:
         mip: Amon
         preprocessor: decadal_mean
-    scripts: None
+    scripts: null
