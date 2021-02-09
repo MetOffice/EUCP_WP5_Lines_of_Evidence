@@ -18,7 +18,7 @@ documentation:
   #  - EUCP_WP5
 
 datasets:
-  - {dataset: CanESM2, project: CMIP5, exp: [historical, rcp85], ensemble: r1i1p1}
+  - {dataset: CanESM2, project: CMIP5, ensemble: r1i1p1}
 
 preprocessors:
   mean:
@@ -26,35 +26,76 @@ preprocessors:
       operator: mean
       period: month
 
+
 var_def:
   tas: &tas
     short_name: tas
     mip: Amon
     preprocessor: mean
 
+  tas_hist: &tas_hist
+    <<: *tas
+    exp: historical
+
+  tas_rcp85: &tas_rcp85
+    <<: *tas
+    exp: rcp85  
+
+
 diagnostics:
   stats:
     description: Compute stats
     variables:
+      # historical period
       tas_1960s:
-        <<: *tas
+        <<: *tas_hist
         start_year: 1961
         end_year: 1970
 
       tas_1970s:
-        <<: *tas
+        <<: *tas_hist
         start_year: 1971
         end_year: 1980
 
       tas_1980s:
-        <<: *tas
+        <<: *tas_hist
         start_year: 1981
         end_year: 1990
 
       tas_1990s:
-        <<: *tas
+        <<: *tas_hist
         start_year: 1991
         end_year: 2000
+
+      tas_2040s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2041
+        end_year: 2050
+
+      tas_2050s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2051
+        end_year: 2060
+    
+      tas_2060s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2061
+        end_year: 2070
+
+      tas_2070s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2071
+        end_year: 2080
+
+      tas_2080s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2081
+        end_year: 2090
+
+      tas_2090s_rcp85:
+        <<: *tas_rcp85
+        start_year: 2091
+        end_year: 2100
 
     scripts:
       main:
