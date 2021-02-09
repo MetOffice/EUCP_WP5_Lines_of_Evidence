@@ -17,22 +17,24 @@ documentation:
   #projects:
   #  - EUCP_WP5
 
-datasets:
+dataset_groups:
   # CMIP5
+  CMIP5_base: &CMIP5_based
   - {dataset: CNRM-CM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: HadGEM2-ES, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: MPI-ESM-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-
-  # CMIP6 (not all present yet?)
-  #- {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
-  #- {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
-  #- {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
-
   # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
   # need to run with '--check level relaxed' to avoid error about lat and lon coord names
   - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  CMIP6: &CMIP6
+  # CMIP6 more complex, need to specify Activity (CMIP or ScenarioMIP) and then experiment (historical, or SSP585 etc.)
+  - {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
+  - {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
+  - {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
+
 
 preprocessors:
   mean:
@@ -49,10 +51,23 @@ var_def:
   tas_hist: &tas_hist
     <<: *tas
     exp: historical
+    additional_datasets: *CMIP5_based
 
   tas_rcp85: &tas_rcp85
     <<: *tas
-    exp: rcp85  
+    exp: rcp85
+    additional_datasets: *CMIP5_based
+
+  tas_hist_CMIP6: &tas_hist_CMIP6
+    <<: *tas
+    activity: CMIP
+    exp: historical
+    additional_datasets: *CMIP6
+
+  tas_SSP585: &tas_SSP585
+    <<: *tas
+    exp: ssp585
+    additional_datasets: *CMIP6
 
 
 diagnostics:
@@ -80,6 +95,7 @@ diagnostics:
         start_year: 1991
         end_year: 2000
 
+      # future RCP85
       tas_2040s_rcp85:
         <<: *tas_rcp85
         start_year: 2041
@@ -108,6 +124,60 @@ diagnostics:
       # note 2100 missing here as not available in some CORDEX output..
       tas_2090s_rcp85:
         <<: *tas_rcp85
+        start_year: 2091
+        end_year: 2099
+
+      # Now for CMIP6 variables
+      # historical period
+      tas_1960s_CMIP6:
+        <<: *tas_hist_CMIP6
+        start_year: 1961
+        end_year: 1970
+
+      tas_1970s_CMIP6:
+        <<: *tas_hist_CMIP6
+        start_year: 1971
+        end_year: 1980
+
+      tas_1980s_CMIP6:
+        <<: *tas_hist_CMIP6
+        start_year: 1981
+        end_year: 1990
+
+      tas_1990s_CMIP6:
+        <<: *tas_hist_CMIP6
+        start_year: 1991
+        end_year: 2000
+
+      # Future period
+      tas_2040s_SSP585:
+        <<: *tas_SSP585
+        start_year: 2041
+        end_year: 2050
+
+      tas_2050s_SSP585:
+        <<: *tas_SSP585
+        start_year: 2051
+        end_year: 2060
+    
+      tas_2060s_SSP585:
+        <<: *tas_SSP585
+        start_year: 2061
+        end_year: 2070
+
+      tas_2070s_SSP585:
+        <<: *tas_SSP585
+        start_year: 2071
+        end_year: 2080
+
+      tas_2080s_SSP585:
+        <<: *tas_SSP585
+        start_year: 2081
+        end_year: 2090
+
+      # note 2100 missing here as not available in some CORDEX output..
+      tas_2090s_SSP585:
+        <<: *tas_SSP585
         start_year: 2091
         end_year: 2099
 
