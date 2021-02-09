@@ -18,18 +18,44 @@ documentation:
   #  - EUCP_WP5
 
 datasets:
-  - {dataset: CanESM2, project: CMIP5, exp: [historical, rcp85], ensemble: r1i1p1, start_year: 1961, end_year: 2100}
+  - {dataset: CanESM2, project: CMIP5, exp: [historical, rcp85], ensemble: r1i1p1}
 
 preprocessors:
-  decadal_mean:
-    decadal_statistics:
+  mean:
+    climate_statistics:
       operator: mean
+      period: month
+
+var_def:
+  tas: &tas
+    short_name: tas
+    mip: Amon
+    preprocessor: mean
 
 diagnostics:
-  main:
+  stats:
     description: Compute stats
     variables:
-      tas:
-        mip: Amon
-        preprocessor: decadal_mean
-    scripts: null
+      tas_1960s:
+        <<: *tas
+        start_year: 1961
+        end_year: 1970
+
+      tas_1970s:
+        <<: *tas
+        start_year: 1971
+        end_year: 1980
+
+      tas_1980s:
+        <<: *tas
+        start_year: 1981
+        end_year: 1990
+
+      tas_1990s:
+        <<: *tas
+        start_year: 1991
+        end_year: 2000
+
+    scripts:
+      main:
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
