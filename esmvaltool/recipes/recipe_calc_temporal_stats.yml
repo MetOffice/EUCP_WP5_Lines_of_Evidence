@@ -18,7 +18,21 @@ documentation:
   #  - EUCP_WP5
 
 datasets:
-  - {dataset: CanESM2, project: CMIP5, ensemble: r1i1p1}
+  # CMIP5
+  - {dataset: CNRM-CM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: HadGEM2-ES, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MPI-ESM-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+
+  # CMIP6 (not all present yet?)
+  #- {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
+  #- {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
+  #- {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn}
+
+  # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
+  # need to run with '--check level relaxed' to avoid error about lat and lon coord names
+  - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
 preprocessors:
   mean:
@@ -30,7 +44,6 @@ preprocessors:
 var_def:
   tas: &tas
     short_name: tas
-    mip: Amon
     preprocessor: mean
 
   tas_hist: &tas_hist
@@ -92,10 +105,11 @@ diagnostics:
         start_year: 2081
         end_year: 2090
 
+      # note 2100 missing here as not available in some CORDEX output..
       tas_2090s_rcp85:
         <<: *tas_rcp85
         start_year: 2091
-        end_year: 2100
+        end_year: 2099
 
     scripts:
       main:
