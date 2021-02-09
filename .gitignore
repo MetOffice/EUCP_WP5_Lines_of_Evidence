@@ -1,2 +1,5 @@
 # ignore output files
 esmvaltool_output/
+
+# vscode config
+.vscode/
