@@ -5,15 +5,16 @@ from esmvaltool.diag_scripts.shared import (
     group_metadata,
     select_metadata,
 )
-from esmvalcore.preprocessor import extract_region
 
 import iris
 
-# this needs to be shifted to the util version on upgrade to iris v3.
+# TODO this needs to be shifted to the util version on upgrade to iris v3.
 from iris.experimental.equalise_cubes import equalise_attributes
 
 import os
 import logging
+
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -59,29 +60,29 @@ def combine_decades(files):
     return cube_mean
 
 
-def get_anomalies(ds_list, base_clim_start, fut_clim_start):
-    base_yrs = get_decades(base_clim_start)
-    fut_yrs = get_decades(fut_clim_start)
+def process_projections_dict(proj_dict, season, out_list):
+    # recursive function to pull out data from dictionary
+    for k, v in proj_dict.items():
+        if isinstance(v, dict):
+            process_projections_dict(v, season, out_list)
+        else:
+            # extract required season
+            season_con = iris.Constraint(season_number=season)
+            data = v.extract(season_con)
+            # this should be a scalar cube..
+            out_list.append(data.data.item())
 
+
+def get_anomalies(ds_list, base_clim_start, fut_clim_start):
     # construct baseline
-    base_files = [
-        select_metadata(ds_list, start_year=base_yrs[0])[0]["filename"],
-        select_metadata(ds_list, start_year=base_yrs[1])[0]["filename"],
-        select_metadata(ds_list, start_year=base_yrs[2])[0]["filename"],
-    ]
-    # compute the mean
-    base_mean = combine_decades(base_files)
+    base_file = select_metadata(ds_list, start_year=base_clim_start)[0]["filename"]
+    base_cube = iris.load_cube(base_file)
 
     # get future
-    fut_files = [
-        select_metadata(ds_list, start_year=fut_yrs[0])[0]["filename"],
-        select_metadata(ds_list, start_year=fut_yrs[1])[0]["filename"],
-        select_metadata(ds_list, start_year=fut_yrs[2])[0]["filename"],
-    ]
-    # compute mean
-    fut_mean = combine_decades(fut_files)
+    fut_file = select_metadata(ds_list, start_year=fut_clim_start)[0]["filename"]
+    fut_cube = iris.load_cube(fut_file)
 
-    anomaly = fut_mean - base_mean
+    anomaly = fut_cube - base_cube
 
     return anomaly
 
@@ -90,12 +91,9 @@ def main(cfg):
     # The config object is a dict of all the metadata from the pre-processor
     logger.info(cfg)
 
-    # 1961-1990
+    # these could come from recipe in future
     base_start = 1961
-    # 2071-2100
-    fut_start = 2071
-
-    domain = PICHELLI_DOMAIN
+    fut_start = 2070
 
     # first group datasets by project..
     # this creates a dict of datasets keyed by project (CMIP5, CMIP6 etc.)
@@ -104,6 +102,7 @@ def main(cfg):
     # for CORDEX, combo of dataset and driver (and possibly also domain if we start adding those)
     # also gets more complex if we start adding in different ensembles..
 
+    logger.info("Loading data")
     # empty dict to store results
     projections = dict.fromkeys(projects.keys())
     # loop over projects
@@ -128,24 +127,18 @@ def main(cfg):
                 projections[proj][m] = get_anomalies(models[m], base_start, fut_start)
 
     # we now have all the projections in the projections dictionary
-    # lets turn them into spatial means too..
+    # now lets plot them
+    # first we need to process the dictionary, and move the data into a list of vectors
+    logger.info("Processing for plotting")
+    proj_plotting = dict.fromkeys(projections.keys())
+    for p in projections:
+        vals = []
+        process_projections_dict(projections[p], 1, vals)
+        proj_plotting[p] = vals
 
-    season = "JJA"
-
-    # need to work on dictionary recursively since it may be nested
-    def process_dict(d):
-        for k, v in d.items():
-            if isinstance(v, dict):
-                process_dict(v)
-            else:
-                return mean_region_and_season(v, domain, season)
-
-    # create dictionary just with project keys
-    proj_means = dict.fromkeys(projections.keys())
-    for p in proj_means.keys():
-        models = projections[p].keys()
-        proj_means[p] = process_dict(projections[p])
-
+    logger.info("Plotting")
+    plt.boxplot(list(proj_plotting.values()))
+    plt.savefig(f"{cfg['plot_dir']}/boxplot.png")
     print("all done")
 
 
