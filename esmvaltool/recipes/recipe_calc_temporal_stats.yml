@@ -30,25 +30,41 @@ dataset_groups:
   - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
   CMIP6: &CMIP6
-  # CMIP6 more complex, need to specify Activity (CMIP or ScenarioMIP) and then experiment (historical, or SSP585 etc.)
+  # CMIP6
   - {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
   - {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
 
+base_proc: &base_proc
+  # change operator to calc different stat
+  operator: mean
+
+regions:
+  alpine: &alpine_reg
+  # "common area" domain from Pichelli 2021 paper
+    start_longitude: 1
+    end_longitude: 17
+    start_latitude: 40
+    end_latitude: 50
 
 preprocessors:
-  mean:
+  mon_proc:
     climate_statistics:
-      operator: mean
+      <<: *base_proc
       period: month
 
+  season_proc:
+    climate_statistics:
+      <<: *base_proc
+      period: season
+    extract_region:
+      <<: *alpine_reg
 
-var_def:
+
+base_vars:
   var: &var
     # Change short name to process a different variable
-    # change preprocessor to calc a different stat
     short_name: pr
-    preprocessor: mean
 
   var_hist: &var_hist
     <<: *var
@@ -71,118 +87,165 @@ var_def:
     exp: ssp585
     additional_datasets: *CMIP6
 
+  var_decades: &var_decades
+    # historical period
+    var_1960s:
+      <<: *var_hist
+      start_year: 1961
+      end_year: 1970
+      preprocessor: mon_proc
+
+    var_1970s:
+      <<: *var_hist
+      start_year: 1971
+      end_year: 1980
+      preprocessor: mon_proc
+
+    var_1980s:
+      <<: *var_hist
+      start_year: 1981
+      end_year: 1990
+      preprocessor: mon_proc
+
+    var_1990s:
+      <<: *var_hist
+      start_year: 1991
+      end_year: 2000
+      preprocessor: mon_proc
+
+    # future RCP85
+    var_2040s_rcp85:
+      <<: *var_rcp85
+      start_year: 2041
+      end_year: 2050
+      preprocessor: mon_proc
+
+    var_2050s_rcp85:
+      <<: *var_rcp85
+      start_year: 2051
+      end_year: 2060
+      preprocessor: mon_proc
+  
+    var_2060s_rcp85:
+      <<: *var_rcp85
+      start_year: 2061
+      end_year: 2070
+      preprocessor: mon_proc
+
+    var_2070s_rcp85:
+      <<: *var_rcp85
+      start_year: 2071
+      end_year: 2080
+      preprocessor: mon_proc
+
+    var_2080s_rcp85:
+      <<: *var_rcp85
+      start_year: 2081
+      end_year: 2090
+      preprocessor: mon_proc
+
+    # note 2100 missing here as not available in some CORDEX output..
+    var_2090s_rcp85:
+      <<: *var_rcp85
+      start_year: 2091
+      end_year: 2099
+      preprocessor: mon_proc
+
+    # Now for CMIP6 variables
+    # historical period
+    var_1960s_CMIP6:
+      <<: *var_hist_CMIP6
+      start_year: 1961
+      end_year: 1970
+      preprocessor: mon_proc
+
+    var_1970s_CMIP6:
+      <<: *var_hist_CMIP6
+      start_year: 1971
+      end_year: 1980
+      preprocessor: mon_proc
+
+    var_1980s_CMIP6:
+      <<: *var_hist_CMIP6
+      start_year: 1981
+      end_year: 1990
+      preprocessor: mon_proc
+
+    var_1990s_CMIP6:
+      <<: *var_hist_CMIP6
+      start_year: 1991
+      end_year: 2000
+      preprocessor: mon_proc
+
+    # Future period
+    var_2040s_SSP585:
+      <<: *var_SSP585
+      start_year: 2041
+      end_year: 2050
+      preprocessor: mon_proc
+
+    var_2050s_SSP585:
+      <<: *var_SSP585
+      start_year: 2051
+      end_year: 2060
+      preprocessor: mon_proc
+  
+    var_2060s_SSP585:
+      <<: *var_SSP585
+      start_year: 2061
+      end_year: 2070
+      preprocessor: mon_proc
+
+    var_2070s_SSP585:
+      <<: *var_SSP585
+      start_year: 2071
+      end_year: 2080
+      preprocessor: mon_proc
+
+    var_2080s_SSP585:
+      <<: *var_SSP585
+      start_year: 2081
+      end_year: 2090
+      preprocessor: mon_proc
+
+    # note 2100 missing here as not available in some CORDEX output..
+    var_2090s_SSP585:
+      <<: *var_SSP585
+      start_year: 2091
+      end_year: 2099
+      preprocessor: mon_proc
+
+  var_clim_periods: &var_clim_periods
+    var_1961-1990:
+      <<: *var_hist
+      start_year: 1961
+      end_year: 1990
+      preprocessor: season_proc
+
+    var_1961-1990_CMIP6:
+      <<: *var_hist_CMIP6
+      start_year: 1961
+      end_year: 1990
+      preprocessor: season_proc
+
+    var_2070-2099_rcp85:
+      <<: *var_rcp85
+      start_year: 2070
+      end_year: 2099
+      preprocessor: season_proc
+
+    var_2070-2099_SSP585:
+      <<: *var_SSP585
+      start_year: 2070
+      end_year: 2099
+      preprocessor: season_proc
 
 diagnostics:
   stats:
     description: Compute stats
     variables:
-      # historical period
-      var_1960s:
-        <<: *var_hist
-        start_year: 1961
-        end_year: 1970
-
-      var_1970s:
-        <<: *var_hist
-        start_year: 1971
-        end_year: 1980
-
-      var_1980s:
-        <<: *var_hist
-        start_year: 1981
-        end_year: 1990
-
-      var_1990s:
-        <<: *var_hist
-        start_year: 1991
-        end_year: 2000
-
-      # future RCP85
-      var_2040s_rcp85:
-        <<: *var_rcp85
-        start_year: 2041
-        end_year: 2050
-
-      var_2050s_rcp85:
-        <<: *var_rcp85
-        start_year: 2051
-        end_year: 2060
-    
-      var_2060s_rcp85:
-        <<: *var_rcp85
-        start_year: 2061
-        end_year: 2070
-
-      var_2070s_rcp85:
-        <<: *var_rcp85
-        start_year: 2071
-        end_year: 2080
-
-      var_2080s_rcp85:
-        <<: *var_rcp85
-        start_year: 2081
-        end_year: 2090
-
-      # note 2100 missing here as not available in some CORDEX output..
-      var_2090s_rcp85:
-        <<: *var_rcp85
-        start_year: 2091
-        end_year: 2099
-
-      # Now for CMIP6 variables
-      # historical period
-      var_1960s_CMIP6:
-        <<: *var_hist_CMIP6
-        start_year: 1961
-        end_year: 1970
-
-      var_1970s_CMIP6:
-        <<: *var_hist_CMIP6
-        start_year: 1971
-        end_year: 1980
-
-      var_1980s_CMIP6:
-        <<: *var_hist_CMIP6
-        start_year: 1981
-        end_year: 1990
-
-      var_1990s_CMIP6:
-        <<: *var_hist_CMIP6
-        start_year: 1991
-        end_year: 2000
-
-      # Future period
-      var_2040s_SSP585:
-        <<: *var_SSP585
-        start_year: 2041
-        end_year: 2050
-
-      var_2050s_SSP585:
-        <<: *var_SSP585
-        start_year: 2051
-        end_year: 2060
-    
-      var_2060s_SSP585:
-        <<: *var_SSP585
-        start_year: 2061
-        end_year: 2070
-
-      var_2070s_SSP585:
-        <<: *var_SSP585
-        start_year: 2071
-        end_year: 2080
-
-      var_2080s_SSP585:
-        <<: *var_SSP585
-        start_year: 2081
-        end_year: 2090
-
-      # note 2100 missing here as not available in some CORDEX output..
-      var_2090s_SSP585:
-        <<: *var_SSP585
-        start_year: 2091
-        end_year: 2099
-
+      # Set variables to use here
+      <<: *var_clim_periods
     scripts:
       main:
         script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
