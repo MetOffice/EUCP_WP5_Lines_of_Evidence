@@ -137,7 +137,10 @@ def main(cfg):
         proj_plotting[p] = vals
 
     logger.info("Plotting")
-    plt.boxplot(list(proj_plotting.values()))
+    # eventually plotting code etc. will go in a seperate module I think.
+    plot_keys, plot_values = zip(*proj_plotting.items())
+    plt.boxplot(plot_values)
+    plt.gca().set_xticklabels(plot_keys)
     plt.savefig(f"{cfg['plot_dir']}/boxplot.png")
     print("all done")
 
