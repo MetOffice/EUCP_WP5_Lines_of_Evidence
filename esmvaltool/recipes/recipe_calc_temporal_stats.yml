@@ -59,6 +59,8 @@ preprocessors:
       period: season
     extract_region:
       <<: *alpine_reg
+    area_statistics:
+      operator: mean
 
 
 base_vars:
