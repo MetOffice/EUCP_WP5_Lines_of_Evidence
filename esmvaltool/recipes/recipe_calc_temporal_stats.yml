@@ -18,14 +18,71 @@ documentation:
   #  - EUCP_WP5
 
 dataset_groups:
+  # Commented out models are ones for which either one or both of historical or rcp85
+  # experiment data is not available
   # CMIP5
   CMIP5_base: &CMIP5_based
+  - {dataset: bcc-csm1-1, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: bcc-csm1-1-m, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: BNU-ESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CanAM4, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CanCM4, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CanESM2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CMCC-CESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CMCC-CM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CMCC-CMS, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CNRM-CM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-  - {dataset: HadGEM2-ES, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-  - {dataset: MPI-ESM-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CNRM-CM5-2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CFSv2-2011, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: ACCESS1-0, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: ACCESS1-3, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CSIRO-Mk3-6-0, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: FIO-ESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: EC-EARTH, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: inmcm4, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: IPSL-CM5A-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: IPSL-CM5A-MR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: IPSL-CM5B-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: FGOALS-g2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: FGOALS-gl, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: FGOALS-s2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: MIROC4h, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MIROC5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MIROC-ESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MIROC-ESM-CHEM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: HadCM3, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: HadGEM2-A, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: HadGEM2-ES, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: HadGEM2-CC, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MPI-ESM-MR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MPI-ESM-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: MPI-ESM-P, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: MRI-AGCM3-2H, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: MRI-AGCM3-2S, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: MRI-CGCM3, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: MRI-ESM1, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GISS-E2-H, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GISS-E2-H-CC, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GISS-E2-R, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GISS-E2-R-CC, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: GEOS-5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CCSM4, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: NorESM1-M, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-    
+  - {dataset: NorESM1-ME, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: NICAM-09, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: HadGEM2-AO, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: GFDL-CM2p1, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GFDL-CM3, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GFDL-ESM2G, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: GFDL-ESM2M, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: GFDL-HIRAM-C180, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: GFDL-HIRAM-C360, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CESM1-BGC, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CESM1-CAM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CESM1-CAM5-1-FV2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  # - {dataset: CESM1-FASTCHEM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon}
+  
   # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
   # need to run with '--check level relaxed' to avoid error about lat and lon coord names
   - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
