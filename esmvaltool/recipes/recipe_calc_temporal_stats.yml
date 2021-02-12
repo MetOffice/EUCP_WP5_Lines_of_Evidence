@@ -23,17 +23,24 @@ dataset_groups:
   - {dataset: CNRM-CM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: HadGEM2-ES, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: MPI-ESM-LR, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: EC-EARTH, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: NorESM1-M, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+    
   # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
   # need to run with '--check level relaxed' to avoid error about lat and lon coord names
   - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: MOHC, driver: ICHEC-EC-EARTH, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: MOHC, driver: NCC-NorESM1-M, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
   CMIP6: &CMIP6
   # CMIP6
-  - {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
+  - {dataset: CNRM-CM6-1, project: CMIP6, ensemble: r1i1p1f2, grid: gr, mip: Amon}
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
   - {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
+  - {dataset: EC-Earth3, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
+  - {dataset: NorESM2-MM, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
 
 base_proc: &base_proc
   # change operator to calc different stat
@@ -66,7 +73,7 @@ preprocessors:
 base_vars:
   var: &var
     # Change short name to process a different variable
-    short_name: pr
+    short_name: tas
 
   var_hist: &var_hist
     <<: *var
@@ -250,4 +257,4 @@ diagnostics:
       <<: *var_clim_periods
     scripts:
       main:
-        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
