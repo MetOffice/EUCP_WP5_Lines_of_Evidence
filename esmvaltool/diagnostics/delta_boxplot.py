@@ -4,6 +4,7 @@ from esmvaltool.diag_scripts.shared import (
     run_diagnostic,
     group_metadata,
     select_metadata,
+    extract_variables,
 )
 
 import iris
@@ -89,7 +90,11 @@ def get_anomalies(ds_list, base_clim_start, fut_clim_start):
 
 def main(cfg):
     # The config object is a dict of all the metadata from the pre-processor
-    logger.info(cfg)
+
+    # get variable processed
+    var = list(extract_variables(cfg).keys())
+    assert len(var) == 1
+    var = var[0]
 
     # these could come from recipe in future
     base_start = 1961
@@ -105,6 +110,7 @@ def main(cfg):
     logger.info("Loading data")
     # empty dict to store results
     projections = dict.fromkeys(projects.keys())
+    model_lists = dict.fromkeys(projects.keys())
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -113,6 +119,7 @@ def main(cfg):
 
         # empty dict for results
         projections[proj] = dict.fromkeys(models.keys())
+        model_lists[proj] = []
         # loop over the models
         for m in models:
             if proj == "CORDEX":
@@ -123,26 +130,37 @@ def main(cfg):
                     projections[proj][m][d] = get_anomalies(
                         drivers[d], base_start, fut_start
                     )
+                    model_lists[proj].append(f"{d} {m}")
             else:
                 projections[proj][m] = get_anomalies(models[m], base_start, fut_start)
+                model_lists[proj].append(f"{m}")
 
     # we now have all the projections in the projections dictionary
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
-    logger.info("Processing for plotting")
-    proj_plotting = dict.fromkeys(projections.keys())
-    for p in projections:
-        vals = []
-        process_projections_dict(projections[p], 1, vals)
-        proj_plotting[p] = vals
-
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
     logger.info("Plotting")
-    # eventually plotting code etc. will go in a seperate module I think.
-    plot_keys, plot_values = zip(*proj_plotting.items())
-    plt.boxplot(plot_values)
-    plt.gca().set_xticklabels(plot_keys)
-    plt.savefig(f"{cfg['plot_dir']}/boxplot.png")
-    print("all done")
+    for s in seasons.keys():
+        proj_plotting = dict.fromkeys(projections.keys())
+        for p in projections:
+            vals = []
+            process_projections_dict(projections[p], s, vals)
+            proj_plotting[p] = vals
+
+        # eventually plotting code etc. will go in a seperate module I think.
+        plot_keys, plot_values = zip(*proj_plotting.items())
+        plt.boxplot(plot_values)
+        plt.gca().set_xticklabels(plot_keys)
+        plt.title(f"{seasons[s]} {var} change")
+        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
+        plt.close()
+
+    # print all datasets used
+    print("Input models for plots:")
+    for p in model_lists.keys():
+        print(f"{p}: {len(model_lists[p])} models")
+        print(model_lists[p])
+        print("")
 
 
 if __name__ == "__main__":
