@@ -110,7 +110,7 @@ dataset_groups:
   - {dataset: ACCESS-CM2, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: MPI-ESM1-2-HR, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: E3SM-1-1, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
-  - {dataset: EC-Earth3, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
+  # - {dataset: EC-Earth3, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon} - Some missing years in SSP585 for pr
   # - {dataset: EC-Earth3-AerChem, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
   # - {dataset: EC-Earth3-CC, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
   - {dataset: EC-Earth3-Veg, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
@@ -120,7 +120,7 @@ dataset_groups:
   - {dataset: INM-CM4-8, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon}
   - {dataset: INM-CM5-0, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon}
   - {dataset: IPSL-CM6A-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
-  - {dataset: KIOST-ESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon}
+  # - {dataset: KIOST-ESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon} (no pr data)
   - {dataset: MIROC6, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: MIROC-ES2L, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon}
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
@@ -172,7 +172,7 @@ preprocessors:
 base_vars:
   var: &var
     # Change short name to process a different variable
-    short_name: tas
+    short_name: pr
 
   var_hist: &var_hist
     <<: *var
