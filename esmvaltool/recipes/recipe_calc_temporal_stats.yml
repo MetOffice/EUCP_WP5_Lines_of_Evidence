@@ -356,4 +356,7 @@ diagnostics:
       <<: *var_clim_periods
     scripts:
       main:
-        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
+        # JASMIN
+        # script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
+        # MO
+        script: /net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
