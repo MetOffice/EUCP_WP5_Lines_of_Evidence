@@ -67,6 +67,8 @@ def process_projections_dict(proj_dict, season, out_list):
         if isinstance(v, dict):
             process_projections_dict(v, season, out_list)
         else:
+            if v is None:
+                continue
             # extract required season
             season_con = iris.Constraint(season_number=season)
             data = v.extract(season_con)
@@ -76,11 +78,19 @@ def process_projections_dict(proj_dict, season, out_list):
 
 def get_anomalies(ds_list, base_clim_start, fut_clim_start):
     # construct baseline
-    base_file = select_metadata(ds_list, start_year=base_clim_start)[0]["filename"]
+    base_metadata = select_metadata(ds_list, start_year=base_clim_start)
+    if base_metadata == []:
+        logging.warning(f"Base climatology (start {base_clim_start}) not found")
+        return None
+    base_file = base_metadata[0]["filename"]
     base_cube = iris.load_cube(base_file)
 
     # get future
-    fut_file = select_metadata(ds_list, start_year=fut_clim_start)[0]["filename"]
+    fut_metadata = select_metadata(ds_list, start_year=fut_clim_start)
+    if fut_metadata == []:
+        logging.warning(f"Future climatology (start {fut_clim_start}) not found")
+        return None
+    fut_file = fut_metadata[0]["filename"]
     fut_cube = iris.load_cube(fut_file)
 
     anomaly = fut_cube - base_cube
@@ -127,12 +137,19 @@ def main(cfg):
                 drivers = group_metadata(models[m], "driver")
                 projections[proj][m] = dict.fromkeys(drivers.keys())
                 for d in drivers:
-                    projections[proj][m][d] = get_anomalies(
-                        drivers[d], base_start, fut_start
-                    )
+                    logging.info(f"Calculating anomalies for {proj} {m} {d}")
+                    anoms = get_anomalies(drivers[d], base_start, fut_start)
+                    if anoms is None:
+                        del projections[proj][m]
+                        continue
+                    projections[proj][m][d] = anoms
                     model_lists[proj].append(f"{d} {m}")
             else:
-                projections[proj][m] = get_anomalies(models[m], base_start, fut_start)
+                logging.info(f"Calculating anomalies for {proj} {m}")
+                anoms = get_anomalies(models[m], base_start, fut_start)
+                if anoms is None:
+                    continue
+                projections[proj][m] = anoms
                 model_lists[proj].append(f"{m}")
 
     # we now have all the projections in the projections dictionary
