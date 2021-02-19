@@ -83,14 +83,67 @@ dataset_groups:
   # - {dataset: CESM1-FASTCHEM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon}
   
-  # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
-  # need to run with '--check level relaxed' to avoid error about lat and lon coord names
-  - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
-  - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  - {institute: MOHC, driver: ICHEC-EC-EARTH, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  - {institute: MOHC, driver: NCC-NorESM1-M, dataset: MOHC-HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # EURO CORDEX (EUR-11)
 
+  # need to run MOHC with '--check level relaxed' to avoid error about lat and lon coord names
+  - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: MOHC, driver: ICHEC-EC-EARTH, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: MOHC, driver: NCC-NorESM1-M, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  # - {institute: CLMcom, driver: CNRM-CERFACS-CNRM-CM5, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - Concatenation error (data types differ)
+  # - {institute: CLMcom, driver: MOHC-HadGEM2-ES, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: CLMcom, driver: MPI-M-MPI-ESM-LR, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: CLMcom, driver: NCC-NorESM1-M, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  - {institute: CLMcom-ETH, driver: MOHC-HadGEM2-ES, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: CLMcom-ETH, driver: MPI-M-MPI-ESM-LR, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: CLMcom-ETH, driver: ICHEC-EC-EARTH, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: CLMcom-ETH, driver: NCC-NorESM1-M, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  # - {institute: CNRM, driver: CNRM-CERFACS-CNRM-CM5, dataset: ALADIN63, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11} - Complains FX file needed to do area stats
+  # - {institute: CNRM, driver: MOHC-HadGEM2-ES, dataset: ALADIN63, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: CNRM, driver: MPI-M-MPI-ESM-LR, dataset: ALADIN63, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: CNRM, driver: NCC-NorESM1-M, dataset: ALADIN63, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+    
+  - {institute: DMI, driver: CNRM-CERFACS-CNRM-CM5, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: DMI, driver: MOHC-HadGEM2-ES, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: DMI, driver: MPI-M-MPI-ESM-LR, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: DMI, driver: IPSL-IPSL-CM5A-MR, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: DMI, driver: ICHEC-EC-EARTH, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: DMI, driver: NCC-NorESM1-M, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v3, domain: EUR-11}
+
+  - {institute: GERICS, driver: CNRM-CERFACS-CNRM-CM5, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: GERICS, driver: IPSL-IPSL-CM5A-MR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: GERICS, driver: MPI-M-MPI-ESM-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: GERICS, driver: NCC-NorESM1-M, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: GERICS, driver: NOAA-GFDL-GFDL-ESM2G, dataset: REMO2015, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  # - {institute: ICTP, driver: MPI-M-MPI-ESM-LR, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - FX file needed
+  # - {institute: ICTP, driver: MOHC-HadGEM2-ES, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+    
+  - {institute: KNMI, driver: CNRM-CERFACS-CNRM-CM5, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: KNMI, driver: MOHC-HadGEM2-ES, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  - {institute: KNMI, driver: MPI-M-MPI-ESM-LR, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: KNMI, driver: IPSL-IPSL-CM5A-MR, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: KNMI, driver: ICHEC-EC-EARTH, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: KNMI, driver: NCC-NorESM1-M, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+
+  - {institute: MPI-CSC, driver: MPI-M-MPI-ESM-LR, dataset: REMO2009, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  
+  # - {institute: RMIB-UGent, driver: CNRM-CERFACS-CNRM-CM5, dataset: ALARO-0, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - Complains FX file needed to do area stats
+    
+  - {institute: SMHI, driver: CNRM-CERFACS-CNRM-CM5, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: SMHI, driver: MOHC-HadGEM2-ES, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: SMHI, driver: MPI-M-MPI-ESM-LR, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1a, domain: EUR-11}
+  - {institute: SMHI, driver: IPSL-IPSL-CM5A-MR, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: SMHI, driver: ICHEC-EC-EARTH, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: SMHI, driver: NCC-NorESM1-M, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  
+  
+    
   CMIP6: &CMIP6
   # CMIP6
   - {dataset: TaiESM1, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
