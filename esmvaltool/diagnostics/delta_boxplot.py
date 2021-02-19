@@ -15,6 +15,7 @@ from iris.experimental.equalise_cubes import equalise_attributes
 import os
 import logging
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(os.path.basename(__file__))
@@ -76,7 +77,7 @@ def process_projections_dict(proj_dict, season, out_list):
             out_list.append(data.data.item())
 
 
-def get_anomalies(ds_list, base_clim_start, fut_clim_start):
+def get_anomalies(ds_list, base_clim_start, fut_clim_start, relative=False):
     # construct baseline
     base_metadata = select_metadata(ds_list, start_year=base_clim_start)
     if base_metadata == []:
@@ -93,7 +94,12 @@ def get_anomalies(ds_list, base_clim_start, fut_clim_start):
     fut_file = fut_metadata[0]["filename"]
     fut_cube = iris.load_cube(fut_file)
 
-    anomaly = fut_cube - base_cube
+    if relative:
+        diff = fut_cube - base_cube
+        anomaly = (diff / base_cube) * 100
+        anomaly.units = "%"
+    else:
+        anomaly = fut_cube - base_cube
 
     return anomaly
 
@@ -105,6 +111,11 @@ def main(cfg):
     var = list(extract_variables(cfg).keys())
     assert len(var) == 1
     var = var[0]
+
+    if var == "pr":
+        rel_change = True
+    else:
+        rel_change = False
 
     # these could come from recipe in future
     base_start = 1961
@@ -138,15 +149,14 @@ def main(cfg):
                 projections[proj][m] = dict.fromkeys(drivers.keys())
                 for d in drivers:
                     logging.info(f"Calculating anomalies for {proj} {m} {d}")
-                    anoms = get_anomalies(drivers[d], base_start, fut_start)
+                    anoms = get_anomalies(drivers[d], base_start, fut_start, rel_change)
                     if anoms is None:
-                        del projections[proj][m]
                         continue
                     projections[proj][m][d] = anoms
                     model_lists[proj].append(f"{d} {m}")
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
-                anoms = get_anomalies(models[m], base_start, fut_start)
+                anoms = get_anomalies(models[m], base_start, fut_start, rel_change)
                 if anoms is None:
                     continue
                 projections[proj][m] = anoms
@@ -167,6 +177,8 @@ def main(cfg):
         # eventually plotting code etc. will go in a seperate module I think.
         plot_keys, plot_values = zip(*proj_plotting.items())
         plt.boxplot(plot_values)
+        for i, p in enumerate(plot_keys()):
+            plt.scatter(np.full_like(plot_values[i], (i + 1)), plot_values[i])
         plt.gca().set_xticklabels(plot_keys)
         plt.title(f"{seasons[s]} {var} change")
         plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
