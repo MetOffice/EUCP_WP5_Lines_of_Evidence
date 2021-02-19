@@ -14,9 +14,11 @@ from iris.experimental.equalise_cubes import equalise_attributes
 
 import os
 import logging
+import re
 
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.lib.npyio import savez_compressed
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -62,19 +64,23 @@ def combine_decades(files):
     return cube_mean
 
 
-def process_projections_dict(proj_dict, season, out_list):
+def process_projections_dict(proj_dict, season):
     # recursive function to pull out data from dictionary
+    out_data = {}
     for k, v in proj_dict.items():
         if isinstance(v, dict):
-            process_projections_dict(v, season, out_list)
+            vals = process_projections_dict(v, season)
+            for k1, v1 in vals.items():
+                out_data[f"{k} {k1}"] = v1
         else:
             if v is None:
                 continue
             # extract required season
             season_con = iris.Constraint(season_number=season)
             data = v.extract(season_con)
-            # this should be a scalar cube..
-            out_list.append(data.data.item())
+            # this should be a scalar cube, add the value to a dictionary
+            out_data[k] = data.data.item()
+    return out_data
 
 
 def get_anomalies(ds_list, base_clim_start, fut_clim_start, relative=False):
@@ -132,6 +138,7 @@ def main(cfg):
     # empty dict to store results
     projections = dict.fromkeys(projects.keys())
     model_lists = dict.fromkeys(projects.keys())
+    cordex_drivers = []
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -153,7 +160,8 @@ def main(cfg):
                     if anoms is None:
                         continue
                     projections[proj][m][d] = anoms
-                    model_lists[proj].append(f"{d} {m}")
+                    model_lists[proj].append(f"{m} {d}")
+                    cordex_drivers.append(d)
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
                 anoms = get_anomalies(models[m], base_start, fut_start, rel_change)
@@ -161,8 +169,18 @@ def main(cfg):
                     continue
                 projections[proj][m] = anoms
                 model_lists[proj].append(f"{m}")
+    cordex_drivers = set(cordex_drivers)
 
     # we now have all the projections in the projections dictionary
+    # check what driving models we have from CORDEX and decide on some fixed colours for them..
+    # get default colours
+    prop_cycle = plt.rcParams["axes.prop_cycle"]
+    colours = prop_cycle.by_key()["color"]
+    colours_it = enumerate(colours)
+    driver_colours = {}
+    for k in cordex_drivers:
+        driver_colours[k] = next(colours_it)[1]
+
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
     seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
@@ -170,17 +188,55 @@ def main(cfg):
     for s in seasons.keys():
         proj_plotting = dict.fromkeys(projections.keys())
         for p in projections:
-            vals = []
-            process_projections_dict(projections[p], s, vals)
-            proj_plotting[p] = vals
+            proj_plotting[p] = process_projections_dict(projections[p], s)
 
         # eventually plotting code etc. will go in a seperate module I think.
-        plot_keys, plot_values = zip(*proj_plotting.items())
-        plt.boxplot(plot_values)
-        for i, p in enumerate(plot_keys()):
-            plt.scatter(np.full_like(plot_values[i], (i + 1)), plot_values[i])
-        plt.gca().set_xticklabels(plot_keys)
+        projects, plot_values = zip(*proj_plotting.items())
+        # plots_values is a list of dictionaries of model names and associated values
+        plt.figure(figsize=(12.8, 9.6))
+        plt.boxplot([list(v.values()) for v in plot_values])
+        plotted_drivers = set()
+        for i, p in enumerate(plot_values):
+            for m, v in p.items():
+                if re.search(r"^\S+ \S+$", m):
+                    # extract the driving model from the string
+                    driver = m.split(" ")[1]
+                    color = driver_colours[driver]
+                    alpha = 1
+                    sz = 25
+                    # Check if we have already plotted this driving model before..
+                    # This means we only use the label once, and just end up with one legend entry per driver
+                    if driver in plotted_drivers:
+                        driver = None
+                    else:
+                        plotted_drivers.add(driver)
+                else:
+                    driver = [cd for cd in cordex_drivers if m in cd]
+                    # check if model matches any of the CORDEX ones
+                    if driver:
+                        driver = driver[0]
+                        color = driver_colours[driver]
+                        alpha = 1
+                        sz = 25
+                        # Check if we have already plotted this driving model before..
+                        # This means we only use the label once, and just end up with one legend entry per driver
+                        if driver in plotted_drivers:
+                            driver = None
+                        else:
+                            plotted_drivers.add(driver)
+                    else:
+                        color = "k"
+                        alpha = 0.3
+                        driver = None
+                        sz = 10
+                # Add some random "jitter" to the x-axis
+                x = np.random.normal(i + 1, 0.05, size=1)
+                plt.scatter(x, v, label=driver, color=color, alpha=alpha, s=sz)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.axhline(0, linestyle="dotted", color="k")
+        plt.gca().set_xticklabels(projects)
         plt.title(f"{seasons[s]} {var} change")
+        plt.tight_layout()
         plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
         plt.close()
 
