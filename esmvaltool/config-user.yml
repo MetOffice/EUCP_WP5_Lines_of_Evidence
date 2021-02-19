@@ -32,7 +32,7 @@ remove_preproc_dir: false
 max_parallel_tasks: null
 # Path to custom config-developer file, to customise project configurations.
 # See config-developer.yml for an example. Set to None to use the default
-config_developer_file: null
+config_developer_file: /net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/config-developer.yml
 # Get profiling information for diagnostics
 # Only available for Python diagnostics
 profile_diagnostic: false
