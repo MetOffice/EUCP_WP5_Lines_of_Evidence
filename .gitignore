@@ -3,3 +3,6 @@ esmvaltool_output/
 
 # vscode config
 .vscode/
+
+# ignore slurm output
+*.out
