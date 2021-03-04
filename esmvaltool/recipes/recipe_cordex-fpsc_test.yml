@@ -1,0 +1,96 @@
+# ESMValTool
+# recipe_python.yml
+---
+documentation:
+  description: |
+    Example recipe that plots a map and timeseries of temperature.
+    Now a test of cordex-fpsc data
+
+  authors:
+    - andela_bouwe
+    - righi_mattia
+
+datasets:
+  - {
+      dataset: HadREM3-RA-UM10.1,
+      driver: HadGEM3-GC3.1-N512,
+      project: cordex-fpsc,
+      exp: historical,
+      ensemble: r1i1p1,
+      domain: REU-2,
+      mip: mon,
+      rcm_version: fpsconv-x0n1-v1,
+    }
+
+preprocessors:
+  select_january:
+    extract_month:
+      month: 1
+
+  annual_mean_box:
+    # extract point breaks with cordex-fpsc RCM data
+    # extract_point:
+    #   latitude: 52.379189
+    #   longitude: 4.899431
+    #   scheme: linear
+    extract_region:
+      start_longitude: 0
+      end_longitude: 5
+      start_latitude: 50
+      end_latitude: 55
+
+    annual_statistics:
+      operator: mean
+    area_statistics:
+      operator: mean
+
+  annual_mean_all:
+    area_statistics:
+      operator: mean
+    annual_statistics:
+      operator: mean
+
+diagnostics:
+  map:
+    description: map of temperature in January 2000.
+    themes:
+      - phys
+    realms:
+      - atmos
+    variables:
+      tas:
+        frequency: mon
+        preprocessor: select_january
+        start_year: 2000
+        end_year: 2000
+    scripts:
+      script1:
+        script: examples/diagnostic.py
+        quickplot:
+          plot_type: pcolormesh
+          cmap: Reds
+
+  timeseries:
+    description: Annual mean temperature in Amsterdam and domain mean since 1850.
+    themes:
+      - phys
+    realms:
+      - atmos
+    variables:
+      tas_amsterdam:
+        short_name: tas
+        mip: Amon
+        preprocessor: annual_mean_box
+        start_year: 1998
+        end_year: 2007
+      tas_global:
+        short_name: tas
+        mip: Amon
+        preprocessor: annual_mean_all
+        start_year: 1998
+        end_year: 2007
+    scripts:
+      script1:
+        script: examples/diagnostic.py
+        quickplot:
+          plot_type: plot
