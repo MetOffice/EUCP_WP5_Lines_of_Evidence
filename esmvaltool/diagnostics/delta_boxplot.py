@@ -18,7 +18,6 @@ import re
 
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.lib.npyio import savez_compressed
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -123,9 +122,9 @@ def main(cfg):
     else:
         rel_change = False
 
-    # these could come from recipe in future
-    base_start = 1961
-    fut_start = 2070
+    # these should come from recipe in future
+    base_start = 1998
+    fut_start = 2040
 
     # first group datasets by project..
     # this creates a dict of datasets keyed by project (CMIP5, CMIP6 etc.)
@@ -150,7 +149,7 @@ def main(cfg):
         model_lists[proj] = []
         # loop over the models
         for m in models:
-            if proj == "CORDEX":
+            if proj[:6].upper() == "CORDEX":
                 # then we need to go one deeper in the dictionary to deal with driving models
                 drivers = group_metadata(models[m], "driver")
                 projections[proj][m] = dict.fromkeys(drivers.keys())
