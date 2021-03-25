@@ -11,16 +11,7 @@ documentation:
     - righi_mattia
 
 datasets:
-  - {
-      dataset: HadREM3-RA-UM10.1,
-      driver: HadGEM3-GC3.1-N512,
-      project: cordex-fpsc,
-      exp: historical,
-      ensemble: r1i1p1,
-      domain: REU-2,
-      mip: mon,
-      rcm_version: fpsconv-x0n1-v1,
-    }
+  - { project: UKCP-rcm, exp: rcp85, ensemble: 01, domain: eur, frequency: mon }
 
 preprocessors:
   select_january:
