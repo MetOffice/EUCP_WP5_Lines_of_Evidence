@@ -81,7 +81,7 @@ dataset_groups:
   - {dataset: CESM1-CAM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   # - {dataset: CESM1-CAM5-1-FV2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   # - {dataset: CESM1-FASTCHEM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-  - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon}
+  # - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon}
   
   # EURO CORDEX (EUR-11)
 
@@ -97,7 +97,7 @@ dataset_groups:
   # - {institute: CLMcom, driver: MPI-M-MPI-ESM-LR, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   # - {institute: CLMcom, driver: NCC-NorESM1-M, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
-  - {institute: CLMcom-ETH, driver: MOHC-HadGEM2-ES, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: CLMcom-ETH, driver: MOHC-HadGEM2-ES, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: CLMcom-ETH, driver: MPI-M-MPI-ESM-LR, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: CLMcom-ETH, driver: ICHEC-EC-EARTH, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: CLMcom-ETH, driver: NCC-NorESM1-M, dataset: COSMO-crCLIM-v1-1, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
@@ -117,9 +117,9 @@ dataset_groups:
   - {institute: GERICS, driver: CNRM-CERFACS-CNRM-CM5, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: GERICS, driver: IPSL-IPSL-CM5A-MR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  - {institute: GERICS, driver: MPI-M-MPI-ESM-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: GERICS, driver: MPI-M-MPI-ESM-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - missing
   - {institute: GERICS, driver: NCC-NorESM1-M, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  - {institute: GERICS, driver: NOAA-GFDL-GFDL-ESM2G, dataset: REMO2015, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # - {institute: GERICS, driver: NOAA-GFDL-GFDL-ESM2G, dataset: REMO2015, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - missing
 
   # - {institute: ICTP, driver: MPI-M-MPI-ESM-LR, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - FX file needed
   # - {institute: ICTP, driver: MOHC-HadGEM2-ES, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
@@ -142,7 +142,8 @@ dataset_groups:
   - {institute: SMHI, driver: ICHEC-EC-EARTH, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: SMHI, driver: NCC-NorESM1-M, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
-  
+  # CPM models (also using CMIP5 conventions)
+  # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-fpsc, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
     
   CMIP6: &CMIP6
   # CMIP6
@@ -154,7 +155,7 @@ dataset_groups:
   - {dataset: FGOALS-g3, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: CanESM5, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: CanESM5-CanOE, project: CMIP6, ensemble: r1i1p2f1, grid: gn, mip: Amon}
-  - {dataset: IITM-ESM, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
+  # - {dataset: IITM-ESM, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: CMCC-CM2-SR5, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: CNRM-CM6-1, project: CMIP6, ensemble: r1i1p1f2, grid: gr, mip: Amon}
   - {dataset: CNRM-CM6-1-HR, project: CMIP6, ensemble: r1i1p1f2, grid: gr, mip: Amon}
@@ -190,7 +191,7 @@ dataset_groups:
   - {dataset: GFDL-CM4, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon}
   - {dataset: GFDL-ESM4, project: CMIP6, ensemble: r1i1p1f1, grid: gr1, mip: Amon}
   - {dataset: NESM3, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
-  - {dataset: CIESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
+  # - {dataset: CIESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
   # - {dataset: MCM-UA-1-0, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon} (ValueError: coordinate's range greater than coordinate's unit's modulus)
 
 
@@ -225,11 +226,11 @@ preprocessors:
 base_vars:
   var: &var
     # Change short name to process a different variable
-    short_name: pr
+    short_name: tas
 
   var_hist: &var_hist
     <<: *var
-    exp: historical
+    exp: [historical, rcp85]
     additional_datasets: *CMIP5_based
 
   var_rcp85: &var_rcp85
@@ -240,7 +241,7 @@ base_vars:
   var_hist_CMIP6: &var_hist_CMIP6
     <<: *var
     activity: CMIP
-    exp: historical
+    exp: [historical, ssp585]
     additional_datasets: *CMIP6
 
   var_SSP585: &var_SSP585
@@ -377,28 +378,28 @@ base_vars:
       preprocessor: mon_proc
 
   var_clim_periods: &var_clim_periods
-    var_1961-1990:
+    var_hist:
       <<: *var_hist
-      start_year: 1961
-      end_year: 1990
+      start_year: 1998
+      end_year: 2007
       preprocessor: season_proc
 
-    var_1961-1990_CMIP6:
+    var_hist_CMIP6:
       <<: *var_hist_CMIP6
-      start_year: 1961
-      end_year: 1990
+      start_year: 1998
+      end_year: 2007
       preprocessor: season_proc
 
-    var_2070-2099_rcp85:
+    var_fut_rcp85:
       <<: *var_rcp85
-      start_year: 2070
-      end_year: 2099
+      start_year: 2040
+      end_year: 2049
       preprocessor: season_proc
 
-    var_2070-2099_SSP585:
+    var_fut_SSP585:
       <<: *var_SSP585
-      start_year: 2070
-      end_year: 2099
+      start_year: 2040
+      end_year: 2049
       preprocessor: season_proc
 
 diagnostics:
@@ -406,10 +407,9 @@ diagnostics:
     description: Compute stats
     variables:
       # Set variables to use here
-      <<: *var_clim_periods
+      # <<: *var_clim_periods
+      <<: *var_decades
     scripts:
       main:
-        # JASMIN
-        # script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
-        # MO
-        script: /net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
+        # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
+        script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
