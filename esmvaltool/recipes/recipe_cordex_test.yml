@@ -1,0 +1,93 @@
+# ESMValTool
+# Recipe to calc temporal statistics of models
+# adapted from example python recipe
+---
+documentation:
+  description: |
+    Recipe to calculate temporal statistics of supplied datasets
+
+  # Need to setup author and project entries
+  authors:
+    - andela_bouwe
+    - righi_mattia
+
+  #maintainer:
+  #  - crocker_thomas
+
+  #projects:
+  #  - EUCP_WP5
+
+  # EURO CORDEX (EUR-11) (only MOHC RCM ones..)
+  # need to run with '--check level relaxed' to avoid error about lat and lon coord names
+  datasets: &cordex_models
+    - {
+        institute: MOHC,
+        driver: CNRM-CERFACS-CNRM-CM5,
+        dataset: HadREM3-GA7-05,
+        project: CORDEX,
+        ensemble: r1i1p1,
+        mip: mon,
+        rcm_version: v2,
+        domain: EUR-11,
+      }
+    - {
+        institute: MOHC,
+        driver: MOHC-HadGEM2-ES,
+        dataset: HadREM3-GA7-05,
+        project: CORDEX,
+        ensemble: r1i1p1,
+        mip: mon,
+        rcm_version: v1,
+        domain: EUR-11,
+      }
+    - {
+        institute: MOHC,
+        driver: MPI-M-MPI-ESM-LR,
+        dataset: HadREM3-GA7-05,
+        project: CORDEX,
+        ensemble: r1i1p1,
+        mip: mon,
+        rcm_version: v1,
+        domain: EUR-11,
+      }
+    # - {
+    #     institute: MOHC,
+    #     driver: ICHEC-EC-EARTH,
+    #     dataset: HadREM3-GA7-05,
+    #     project: CORDEX,
+    #     ensemble: r12i1p1,
+    #     mip: mon,
+    #     rcm_version: v1,
+    #     domain: EUR-11,
+    #   }
+    - {
+        institute: MOHC,
+        driver: NCC-NorESM1-M,
+        dataset: HadREM3-GA7-05,
+        project: CORDEX,
+        ensemble: r1i1p1,
+        mip: mon,
+        rcm_version: v1,
+        domain: EUR-11,
+      }
+
+preprocessors:
+  test:
+    climate_statistics:
+      operator: mean
+      period: month
+
+diagnostics:
+  stats:
+    description: Compute stats
+    variables:
+      tas:
+        short_name: tas
+        preprocessor: test
+        start_year: 1980
+        end_year: 1999
+        exp: historical
+        additional_datasets: *cordex_models
+    scripts:
+      main:
+        script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py

@@ -11,7 +11,7 @@ documentation:
     - righi_mattia
 
 datasets:
-  - { project: UKCP-rcm, exp: rcp85, ensemble: 01, domain: eur, frequency: mon }
+  - { project: UKCP-rcm, exp: rcp85, ensemble: "01", dataset: eur, mip: mon }
 
 preprocessors:
   select_january:
@@ -19,7 +19,7 @@ preprocessors:
       month: 1
 
   annual_mean_box:
-    # extract point breaks with cordex-fpsc RCM data
+    # extract point breaks with cordex-fpsc RCM data, likely to do with the grid
     # extract_point:
     #   latitude: 52.379189
     #   longitude: 4.899431
