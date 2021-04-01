@@ -242,3 +242,11 @@ cordex-fpsc:
   output_file: "{short_name}_{domain}_{driver}_{dataset}_{exp}_{ensemble}_{rcm_version}_{frequency}"
   cmor_type: "CMIP5"
   cmor_path: "cordex"
+
+UKCP-rcm:
+  input_dir:
+    default: "{dataset}/12km/{exp}/{ensemble}/{short_name}/{mip}/{latestversion}"
+  input_file: "{short_name}_{exp}_land-rcm_{dataset}_12km_{ensemble}_{mip}_*.nc"
+  output_file: "{short_name}_{exp}_land-rcm_{dataset}_12km_{ensemble}_{mip}"
+  cmor_type: "CMIP5"
+  cmor_path: "cordex"

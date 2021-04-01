@@ -45,9 +45,10 @@ rootpath:
   CMIP6: /project/champ/data/CMIP6/
   #  OBS: ~/obs_inputpath
   #  RAWOBS: ~/rawobs_inputpath
-  #  default: ~/default_inputpath
+  default: ~/default_inputpath
   CORDEX: /project/champ/data/cordex/output/
   cordex-fpsc: /project/applied/Data/cordex-fpsc/
+  UKCP-rcm: /project/spice/ukcp18/data/land-rcm/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
 # See config-developer.yml for definitions.
@@ -56,6 +57,7 @@ drs:
   CMIP6: BADC
   CORDEX: BADC
   cordex-fpsc: default
+  UKCP-rcm: default
 #  OBS: default
 
 # Site-specific entries: Jasmin
