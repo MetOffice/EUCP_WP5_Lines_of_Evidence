@@ -115,7 +115,8 @@ dataset_groups:
   - {institute: DMI, driver: NCC-NorESM1-M, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v3, domain: EUR-11}
 
   - {institute: GERICS, driver: CNRM-CERFACS-CNRM-CM5, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
-  - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # FIXME Issue with tas, won't concatenate
+  # - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: GERICS, driver: IPSL-IPSL-CM5A-MR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   # - {institute: GERICS, driver: MPI-M-MPI-ESM-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - missing
   - {institute: GERICS, driver: NCC-NorESM1-M, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
@@ -126,7 +127,8 @@ dataset_groups:
     
   - {institute: KNMI, driver: CNRM-CERFACS-CNRM-CM5, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: KNMI, driver: MOHC-HadGEM2-ES, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
-  - {institute: KNMI, driver: MPI-M-MPI-ESM-LR, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # FIXME, tas needs a fix..
+  # - {institute: KNMI, driver: MPI-M-MPI-ESM-LR, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: KNMI, driver: IPSL-IPSL-CM5A-MR, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: KNMI, driver: ICHEC-EC-EARTH, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: KNMI, driver: NCC-NorESM1-M, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
@@ -143,7 +145,7 @@ dataset_groups:
   - {institute: SMHI, driver: NCC-NorESM1-M, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
   # CPM models (also using CMIP5 conventions)
-  # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-fpsc, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
+  - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-fpsc, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
     
   CMIP6: &CMIP6
   # CMIP6
@@ -407,8 +409,8 @@ diagnostics:
     description: Compute stats
     variables:
       # Set variables to use here
-      # <<: *var_clim_periods
-      <<: *var_decades
+      <<: *var_clim_periods
+      # <<: *var_decades
     scripts:
       main:
         # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
