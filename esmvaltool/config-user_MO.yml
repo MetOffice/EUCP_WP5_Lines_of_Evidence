@@ -32,7 +32,7 @@ remove_preproc_dir: false
 max_parallel_tasks: null
 # Path to custom config-developer file, to customise project configurations.
 # See config-developer.yml for an example. Set to None to use the default
-config_developer_file: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/config-developer.yml
+config_developer_file: /net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/config-developer.yml
 # Get profiling information for diagnostics
 # Only available for Python diagnostics
 profile_diagnostic: false
@@ -49,8 +49,6 @@ rootpath:
   CORDEX: /project/champ/data/cordex/output/
   cordex-fpsc: /project/applied/Data/cordex-fpsc/
   UKCP-rcm: /project/spice/ukcp18/data/land-rcm/
-  #UKCP-gcm: /project/spice/ukcp18/GA7/COUPLED/ukcp18_monthly/land-gcm/global/60km/
-  UKCP-gcm: /project/ciid/projects/EUCP/wp5/UKCP/land-gcm/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
 # See config-developer.yml for definitions.
@@ -60,7 +58,6 @@ drs:
   CORDEX: BADC
   cordex-fpsc: default
   UKCP-rcm: default
-  UKCP-gcm: default
 #  OBS: default
 
 # Site-specific entries: Jasmin
@@ -75,37 +72,15 @@ drs:
 #   ana4mips: /group_workspaces/jasmin4/esmeval/obsdata-v2
 #   CORDEX: /badc/cordex/data/CORDEX/output
 # drs:
-#   CMIP5: BADC
 #   CMIP6: BADC
+#   CMIP5: BADC
+#   CMIP3: BADC
 #   CORDEX: BADC
-#   cordex-fpsc: default
-#   UKCP-rcm: default
-#  OBS: default
+#   OBS: BADC
+#   OBS6: BADC
+#   obs4mips: BADC
+#   ana4mips: BADC
 
-# Site-specific entries: Jasmin
-# Uncomment the lines below to locate data on JASMIN
-rootpath:
-  CMIP6: /badc/cmip6/data/CMIP6
-  CMIP5: /badc/cmip5/data/cmip5/output1
-  CMIP3: /badc/cmip3_drs/data/cmip3/output
-  OBS: /group_workspaces/jasmin4/esmeval/obsdata-v2
-  OBS6: /group_workspaces/jasmin4/esmeval/obsdata-v2
-  obs4mips: /group_workspaces/jasmin4/esmeval/obsdata-v2
-  ana4mips: /group_workspaces/jasmin4/esmeval/obsdata-v2
-  # CORDEX: /badc/cordex/data/CORDEX/output
-  # use EUCP copy of CORDEX. This contains Only EUR-11 data!
-  CORDEX: /gws/nopw/j04/precis/EUCP/cordex
-  cordex-fpsc: /gws/nopw/j04/precis/EUCP/cordex-fpsc
-drs:
-  CMIP6: BADC
-  CMIP5: BADC
-  CMIP3: BADC
-  CORDEX: BADC
-  OBS: BADC
-  OBS6: BADC
-  obs4mips: BADC
-  ana4mips: BADC
-  cordex-fpsc: default
 # Site-specific entries: DKRZ
 # Uncomment the lines below to locate data on Mistral at DKRZ
 #rootpath:
