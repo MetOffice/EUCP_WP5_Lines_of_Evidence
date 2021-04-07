@@ -25,6 +25,11 @@ def fix_file(f):
     new_c.coord("longitude").var_name = "lon"
     new_c.coord("latitude").var_name = "lat"
 
+    # remove unneeded coords
+    new_c.remove_coord("month_number")
+    new_c.remove_coord("year")
+    new_c.remove_coord("yyyymm")
+
     # add height coord for near surface temp
     if new_c.var_name == "tas":
         height_c = iris.coords.Coord(1.5, "height", units="m")
