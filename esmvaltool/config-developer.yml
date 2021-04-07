@@ -250,3 +250,11 @@ UKCP-rcm:
   output_file: "{short_name}_{exp}_land-rcm_{dataset}_12km_{ensemble}_{mip}"
   cmor_type: "CMIP5"
   cmor_path: "cordex"
+
+UKCP-gcm:
+  input_dir:
+    default: "{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
+  input_file: "{short_name}_{exp}_land-gcm_global_60km_{ensemble}_{frequency}_*.nc"
+  output_file: "{dataset}_{short_name}_{exp}_land-gcm_global_60km_{ensemble}_{frequency}"
+  cmor_type: "CMIP6"
+  cmor_strict: false

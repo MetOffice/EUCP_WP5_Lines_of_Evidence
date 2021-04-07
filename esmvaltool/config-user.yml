@@ -49,6 +49,8 @@ rootpath:
   CORDEX: /project/champ/data/cordex/output/
   cordex-fpsc: /project/applied/Data/cordex-fpsc/
   UKCP-rcm: /project/spice/ukcp18/data/land-rcm/
+  #UKCP-gcm: /project/spice/ukcp18/GA7/COUPLED/ukcp18_monthly/land-gcm/global/60km/
+  UKCP-gcm: /project/ciid/projects/EUCP/wp5/UKCP/land-gcm/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
 # See config-developer.yml for definitions.
@@ -58,6 +60,7 @@ drs:
   CORDEX: BADC
   cordex-fpsc: default
   UKCP-rcm: default
+  UKCP-gcm: default
 #  OBS: default
 
 # Site-specific entries: Jasmin
