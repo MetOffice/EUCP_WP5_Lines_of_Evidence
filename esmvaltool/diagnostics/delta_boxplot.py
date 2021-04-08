@@ -138,6 +138,7 @@ def main(cfg):
     projections = dict.fromkeys(projects.keys())
     model_lists = dict.fromkeys(projects.keys())
     cordex_drivers = []
+    UKCP_ensembles = []
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -161,6 +162,20 @@ def main(cfg):
                     projections[proj][m][d] = anoms
                     model_lists[proj].append(f"{m} {d}")
                     cordex_drivers.append(d)
+            elif proj == "UKCP18":
+                # go one deeper to deal with individual ensembles
+                ensembles = group_metadata(models[m], "ensemble")
+                projections[proj][m] = dict.fromkeys(ensembles.keys())
+                for ens in ensembles:
+                    logging.info(f"Calculating anomalies for {proj} {m} {ens}")
+                    anoms = get_anomalies(
+                        ensembles[ens], base_start, fut_start, rel_change
+                    )
+                    if anoms is None:
+                        continue
+                    projections[proj][m][ens] = anoms
+                    model_lists[proj].append(f"{m} {ens}")
+                    UKCP_ensembles.append(ens)
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
                 anoms = get_anomalies(models[m], base_start, fut_start, rel_change)
@@ -195,9 +210,9 @@ def main(cfg):
         plt.figure(figsize=(12.8, 9.6))
         plt.boxplot([list(v.values()) for v in plot_values])
         plotted_drivers = set()
-        for i, p in enumerate(plot_values):
-            for m, v in p.items():
-                if re.search(r"^\S+ \S+$", m):
+        for i, p in enumerate(proj_plotting.keys()):
+            for m, v in proj_plotting[p].items():
+                if p[:6].upper() == "CORDEX":
                     # extract the driving model from the string
                     driver = m.split(" ")[1]
                     color = driver_colours[driver]

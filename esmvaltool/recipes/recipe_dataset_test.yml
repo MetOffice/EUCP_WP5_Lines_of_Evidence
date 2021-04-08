@@ -11,7 +11,14 @@ documentation:
     - righi_mattia
 
 datasets:
-  - { project: UKCP-rcm, exp: rcp85, ensemble: "01", dataset: eur, mip: mon }
+  - {
+      project: UKCP-gcm,
+      exp: rcp85,
+      ensemble: "01",
+      dataset: UKCP18,
+      mip: mon,
+      frequency: mon,
+    }
 
 preprocessors:
   select_january:
