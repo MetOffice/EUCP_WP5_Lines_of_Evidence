@@ -22,47 +22,6 @@ import matplotlib.pyplot as plt
 logger = logging.getLogger(os.path.basename(__file__))
 
 
-def get_decades(clim_start_yr):
-    """Return tuple of end years for decades used in a 30 yr climatology period.
-
-    Args:
-        clim_start_yr (int): Start year of climatology period, e.g. 1961 for the 1961-1990 period
-
-    Returns:
-        tuple: start years of decades in 30 year climatology period
-    """
-    clim_start_yrs = (clim_start_yr, clim_start_yr + 10, clim_start_yr + 20)
-
-    return clim_start_yrs
-
-
-def combine_decades(files):
-    """Combine the cubes contained in the provided files into a single cube that is the mean of them
-
-    Args:
-        files (list of str): filenames of netCDF data
-
-    Returns:
-        iris cube: mean of data loaded from files.
-    """
-    # load the files and mean them..
-    cubes = iris.cube.CubeList()
-    i = 1
-    for f in files:
-        c = iris.load_cube(f)
-
-        dummy_coord = iris.coords.AuxCoord(i, long_name="dummy_coord", units=1)
-        c.add_aux_coord(dummy_coord)
-        i = i + 1
-        cubes.append(c)
-
-    # remove any extraneous attributes
-    equalise_attributes(cubes)
-    cube_mean = cubes.merge_cube().collapsed("dummy_coord", iris.analysis.MEAN)
-
-    return cube_mean
-
-
 def process_projections_dict(proj_dict, season):
     # recursive function to pull out data from dictionary
     out_data = {}
