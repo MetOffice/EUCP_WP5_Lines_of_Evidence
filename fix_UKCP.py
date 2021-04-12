@@ -12,7 +12,7 @@ import re
 import logging
 
 
-def fix_file(f):
+def fix_gcm_file(f):
     # Fix the netCDF file located at f
     # return a fixed cube
     # load
@@ -65,7 +65,7 @@ for dpath, dnames, fnames in os.walk(args.in_path):
                     f"Fixing file: {os.path.join(dpath, f)} and saving to: {save_fname}"
                 )
                 if not args.dry_run:
-                    fixed_cube = fix_file(os.path.join(dpath, f))
+                    fixed_cube = fix_gcm_file(os.path.join(dpath, f))
                     # save
                     iris.save(fixed_cube, save_fname)
 
