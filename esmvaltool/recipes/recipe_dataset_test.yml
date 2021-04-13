@@ -12,10 +12,11 @@ documentation:
 
 datasets:
   - {
-      project: UKCP-gcm,
+      project: UKCP18,
+      domain: eur_12km,
       exp: rcp85,
       ensemble: "01",
-      dataset: UKCP18,
+      dataset: land-rcm,
       mip: mon,
       frequency: mon,
     }

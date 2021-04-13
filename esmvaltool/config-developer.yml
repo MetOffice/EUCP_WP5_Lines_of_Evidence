@@ -243,17 +243,9 @@ cordex-fpsc:
   cmor_type: "CMIP5"
   cmor_path: "cordex"
 
-UKCP-rcm:
-  input_dir:
-    default: "{dataset}/12km/{exp}/{ensemble}/{short_name}/{mip}/{latestversion}"
-  input_file: "{short_name}_{exp}_land-rcm_{dataset}_12km_{ensemble}_{mip}_*.nc"
-  output_file: "{short_name}_{exp}_land-rcm_{dataset}_12km_{ensemble}_{mip}"
-  cmor_type: "CMIP5"
-  cmor_path: "cordex"
-
 UKCP18:
   input_dir:
-    default: "{dataset}/{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
+    default: "{dataset}/{domain}/{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
   input_file: "{short_name}_{exp}_{dataset}_{domain}_{ensemble}_{frequency}_*.nc"
   output_file: "{dataset}_{short_name}_{exp}_{dataset}_{domain}_{ensemble}_{frequency}"
   cmor_type: "CMIP6"
