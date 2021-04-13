@@ -94,10 +94,9 @@ def main(cfg):
 
     logger.info("Loading data")
     # empty dict to store results
-    projections = dict.fromkeys(projects.keys())
-    model_lists = dict.fromkeys(projects.keys())
+    projections = {}
+    model_lists = {}
     cordex_drivers = []
-    UKCP_ensembles = []
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -106,7 +105,6 @@ def main(cfg):
 
         # empty dict for results
         projections[proj] = dict.fromkeys(models.keys())
-        model_lists[proj] = []
         # loop over the models
         for m in models:
             if proj[:6].upper() == "CORDEX":
@@ -119,28 +117,35 @@ def main(cfg):
                     if anoms is None:
                         continue
                     projections[proj][m][d] = anoms
+                    if proj not in model_lists:
+                        model_lists[proj] = []
                     model_lists[proj].append(f"{m} {d}")
                     cordex_drivers.append(d)
             elif proj == "UKCP18":
-                # go one deeper to deal with individual ensembles
+                # go deeper to deal with ensembles and datasets
+                # split UKCP into seperate GCM and RCM
+                proj_key = f"UKCP18 {m}"
                 ensembles = group_metadata(models[m], "ensemble")
-                projections[proj][m] = dict.fromkeys(ensembles.keys())
+                projections[proj_key] = dict.fromkeys(ensembles.keys())
                 for ens in ensembles:
-                    logging.info(f"Calculating anomalies for {proj} {m} {ens}")
+                    logging.info(f"Calculating anomalies for {proj_key} {ens}")
                     anoms = get_anomalies(
                         ensembles[ens], base_start, fut_start, rel_change
                     )
                     if anoms is None:
                         continue
-                    projections[proj][m][ens] = anoms
-                    model_lists[proj].append(f"{m} {ens}")
-                    UKCP_ensembles.append(ens)
+                    projections[proj_key][ens] = anoms
+                    if proj_key not in model_lists:
+                        model_lists[proj_key] = []
+                    model_lists[proj_key].append(f"{proj_key} {ens}")
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
                 anoms = get_anomalies(models[m], base_start, fut_start, rel_change)
                 if anoms is None:
                     continue
                 projections[proj][m] = anoms
+                if proj not in model_lists:
+                    model_lists[proj] = []
                 model_lists[proj].append(f"{m}")
     cordex_drivers = set(cordex_drivers)
 
