@@ -51,13 +51,13 @@ preprocessors:
 
 diagnostics:
   map:
-    description: map of temperature in January 2000.
+    description: map of variable in January 2000.
     themes:
       - phys
     realms:
       - atmos
     variables:
-      tas:
+      pr:
         frequency: mon
         preprocessor: select_january
         start_year: 2000
@@ -70,20 +70,20 @@ diagnostics:
           cmap: Reds
 
   timeseries:
-    description: Annual mean temperature in Amsterdam and domain mean since 1850.
+    description: Annual mean variable in Amsterdam and domain mean since a date
     themes:
       - phys
     realms:
       - atmos
     variables:
-      tas_amsterdam:
-        short_name: tas
+      var_amsterdam:
+        short_name: pr
         mip: Amon
         preprocessor: annual_mean_box
         start_year: 1998
         end_year: 2007
-      tas_global:
-        short_name: tas
+      var_global:
+        short_name: pr
         mip: Amon
         preprocessor: annual_mean_all
         start_year: 1998
