@@ -14,6 +14,15 @@ import re
 import logging
 
 
+def remove_unneeded_coords(cube):
+    for c in ["month_number", "year", "yyyymm"]:
+        coord = cube.coords(c)
+        if coord:
+            cube.remove_coord(c)
+
+    return cube
+
+
 def fix_gcm_file(f):
     # Fix the netCDF file located at f
     # return a fixed cube
@@ -28,14 +37,17 @@ def fix_gcm_file(f):
     new_c.coord("latitude").var_name = "lat"
 
     # remove unneeded coords
-    new_c.remove_coord("month_number")
-    new_c.remove_coord("year")
-    new_c.remove_coord("yyyymm")
+    new_c = remove_unneeded_coords(new_c)
 
-    # add height coord for near surface temp
+    # variable specific fixes
     if new_c.var_name == "tas":
         height_c = iris.coords.Coord(1.5, "height", units="m")
         new_c.add_aux_coord(height_c)
+    elif new_c.var_name == "pr":
+        # check units and convert if necessary
+        if new_c.units == "mm/day":
+            new_c.data = new_c.data / 86400
+            new_c.units = "kg m-2 s-1"
 
     return new_c
 
@@ -56,14 +68,17 @@ def fix_rcm_file(f):
     new_c.coord("longitude").standard_name = "longitude"
 
     # remove unneeded coords
-    new_c.remove_coord("month_number")
-    new_c.remove_coord("year")
-    new_c.remove_coord("yyyymm")
+    new_c = remove_unneeded_coords(new_c)
 
-    # add height coord for near surface temp
+    # variable specific fixes
     if new_c.var_name == "tas":
         height_c = iris.coords.Coord(1.5, "height", units="m")
         new_c.add_aux_coord(height_c)
+    elif new_c.var_name == "pr":
+        # check units and convert if necessary
+        if new_c.units == "mm/day":
+            new_c.data = new_c.data / 86400
+            new_c.units = "kg m-2 s-1"
 
     return new_c
 
