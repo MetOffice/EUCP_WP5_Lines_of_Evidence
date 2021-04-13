@@ -23,6 +23,13 @@ def remove_unneeded_coords(cube):
     return cube
 
 
+def fix_lon_lat_names(cube):
+    cube.coord("longitude").var_name = "lon"
+    cube.coord("latitude").var_name = "lat"
+
+    return cube
+
+
 def fix_gcm_file(f):
     # Fix the netCDF file located at f
     # return a fixed cube
@@ -33,8 +40,7 @@ def fix_gcm_file(f):
     new_c = iris.util.squeeze(c)
 
     # fix lon and lat names
-    new_c.coord("longitude").var_name = "lon"
-    new_c.coord("latitude").var_name = "lat"
+    new_c = fix_lon_lat_names(new_c)
 
     # remove unneeded coords
     new_c = remove_unneeded_coords(new_c)
@@ -43,6 +49,7 @@ def fix_gcm_file(f):
     if new_c.var_name == "tas":
         height_c = iris.coords.Coord(1.5, "height", units="m")
         new_c.add_aux_coord(height_c)
+        new_c.convert_units("K")
     elif new_c.var_name == "pr":
         # check units and convert if necessary
         if new_c.units == "mm/day":
@@ -66,6 +73,7 @@ def fix_rcm_file(f):
     new_c = add_aux_unrotated_coords(new_c)
     new_c.coord("latitude").standard_name = "latitude"
     new_c.coord("longitude").standard_name = "longitude"
+    new_c = fix_lon_lat_names(new_c)
 
     # remove unneeded coords
     new_c = remove_unneeded_coords(new_c)
@@ -74,6 +82,7 @@ def fix_rcm_file(f):
     if new_c.var_name == "tas":
         height_c = iris.coords.Coord(1.5, "height", units="m")
         new_c.add_aux_coord(height_c)
+        new_c.convert_units("K")
     elif new_c.var_name == "pr":
         # check units and convert if necessary
         if new_c.units == "mm/day":
