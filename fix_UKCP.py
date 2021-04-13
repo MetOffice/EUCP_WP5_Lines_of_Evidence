@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Script to take UKCP land-gcm files,
 # and apply fixes to make them CMOR compliant for ESMValTool
 # 1st argument, input files path e.g.
@@ -5,6 +6,7 @@
 # 2nd argument, output files path e.g.
 # /project/ciid/projects/EUCP/wp5/UKCP/land-gcm/
 import iris
+from catnip.preparation import add_aux_unrotated_coords
 
 import os
 import argparse
@@ -38,11 +40,41 @@ def fix_gcm_file(f):
     return new_c
 
 
+def fix_rcm_file(f):
+    # Fix the UKCP rcm netCDF file located at f
+    # return a fixed cube
+
+    # load
+    c = iris.load_cube(f)
+
+    # squeeze out ensemble coord
+    new_c = iris.util.squeeze(c)
+
+    # add lat and lon coords
+    new_c = add_aux_unrotated_coords(new_c)
+    new_c.coord("latitude").standard_name = "latitude"
+    new_c.coord("longitude").standard_name = "longitude"
+
+    # remove unneeded coords
+    new_c.remove_coord("month_number")
+    new_c.remove_coord("year")
+    new_c.remove_coord("yyyymm")
+
+    # add height coord for near surface temp
+    if new_c.var_name == "tas":
+        height_c = iris.coords.Coord(1.5, "height", units="m")
+        new_c.add_aux_coord(height_c)
+
+    return new_c
+
+
 logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("in_path", help="Input file to take files from")
 parser.add_argument("out_path", help="Output path to save to")
+parser.add_argument("type", help="UKCP file type to fix", choices=["gcm", "rcm"])
+parser.add_argument("frequency", help="Frequency type to fix", choices=["day", "mon"])
 parser.add_argument(
     "-n",
     "--dry_run",
@@ -57,7 +89,8 @@ for dpath, dnames, fnames in os.walk(args.in_path):
     if fnames:
         # only work with tas and pr files
         for f in fnames:
-            if re.search(r"^(tas|pr).*\.nc$", f):
+            regex = rf"^(tas|pr).*{args.frequency}.*\.nc$"
+            if re.search(regex, f):
                 save_fname = os.path.join(
                     args.out_path, os.path.relpath(dpath, args.in_path), f
                 )
@@ -65,8 +98,12 @@ for dpath, dnames, fnames in os.walk(args.in_path):
                     f"Fixing file: {os.path.join(dpath, f)} and saving to: {save_fname}"
                 )
                 if not args.dry_run:
-                    fixed_cube = fix_gcm_file(os.path.join(dpath, f))
+                    if args.type == "gcm":
+                        fixed_cube = fix_gcm_file(os.path.join(dpath, f))
+                    else:
+                        fixed_cube = fix_rcm_file(os.path.join(dpath, f))
                     # save
+                    os.makedirs(os.path.dirname(save_fname), exist_ok=True)
                     iris.save(fixed_cube, save_fname)
 
 if args.dry_run:
