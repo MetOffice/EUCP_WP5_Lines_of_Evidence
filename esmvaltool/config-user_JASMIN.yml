@@ -74,6 +74,7 @@ rootpath:
   # use EUCP copy of CORDEX. This contains Only EUR-11 data!
   CORDEX: /gws/nopw/j04/precis/EUCP/cordex
   cordex-fpsc: /gws/nopw/j04/precis/EUCP/cordex-fpsc
+  UKCP18: /gws/nopw/j04/precis/EUCP/UKCP18
 drs:
   CMIP6: BADC
   CMIP5: BADC
@@ -84,6 +85,7 @@ drs:
   obs4mips: BADC
   ana4mips: BADC
   cordex-fpsc: default
+  UKCP18: default
 # Site-specific entries: DKRZ
 # Uncomment the lines below to locate data on Mistral at DKRZ
 #rootpath:
