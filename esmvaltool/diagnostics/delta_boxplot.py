@@ -81,9 +81,10 @@ def main(cfg):
     else:
         rel_change = False
 
-    # these should come from recipe in future
-    base_start = 1998
-    fut_start = 2040
+    # establish the time periods of our datasets
+    start_years = list(group_metadata(cfg["input_data"].values(), "start_year"))
+    base_start = min(start_years)
+    fut_start = max(start_years)
 
     # first group datasets by project..
     # this creates a dict of datasets keyed by project (CMIP5, CMIP6 etc.)
@@ -92,6 +93,7 @@ def main(cfg):
     # for CORDEX, combo of dataset and driver (and possibly also domain if we start adding those)
     # also gets more complex if we start adding in different ensembles..
 
+    # This section of the code loads and organises the data to be ready for plotting
     logger.info("Loading data")
     # empty dict to store results
     projections = {}
@@ -104,7 +106,7 @@ def main(cfg):
         models = group_metadata(projects[proj], "dataset")
 
         # empty dict for results
-        projections[proj] = dict.fromkeys(models.keys())
+        projections[proj] = {}
         # loop over the models
         for m in models:
             if proj[:6].upper() == "CORDEX":
@@ -147,8 +149,12 @@ def main(cfg):
                 if proj not in model_lists:
                     model_lists[proj] = []
                 model_lists[proj].append(f"{m}")
+        # remove any empty categories (i.e. UKCP18 which has been split into rcm and gcm)
+        if projections[proj] == {}:
+            del projections[proj]
     cordex_drivers = set(cordex_drivers)
 
+    # this section of the code does all the plotting..
     # we now have all the projections in the projections dictionary
     # check what driving models we have from CORDEX and decide on some fixed colours for them..
     # get default colours
@@ -161,6 +167,7 @@ def main(cfg):
 
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
+    # the projections object is the key one that contains all our data..
     seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
     logger.info("Plotting")
     for s in seasons.keys():
