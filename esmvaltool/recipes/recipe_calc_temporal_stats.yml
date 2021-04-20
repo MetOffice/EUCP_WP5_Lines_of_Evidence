@@ -234,13 +234,12 @@ dataset_groups:
   # - {dataset: CIESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
   # - {dataset: MCM-UA-1-0, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon} (ValueError: coordinate's range greater than coordinate's unit's modulus)
 
-regions:
-  alpine: &alpine_reg
-  # "common area" domain from Pichelli 2021 paper
-    start_longitude: 1
-    end_longitude: 17
-    start_latitude: 40
-    end_latitude: 50
+region: &region
+# "common area" domain from Pichelli 2021 paper
+  start_longitude: 1
+  end_longitude: 17
+  start_latitude: 40
+  end_latitude: 50
 
 hist_time: &hist_time
   start_year: 1981
@@ -257,7 +256,7 @@ preprocessors:
       operator: mean
       period: season
     extract_region:
-      <<: *alpine_reg
+      <<: *region
 
   season_area_mean_proc: 
     <<: *season_proc
@@ -384,5 +383,5 @@ diagnostics:
     scripts:
       main:
         script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
-        domain: *alpine_reg
+        domain: *region
         # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
