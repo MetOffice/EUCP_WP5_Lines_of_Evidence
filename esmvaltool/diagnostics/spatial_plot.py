@@ -8,12 +8,13 @@ from esmvaltool.diag_scripts.shared import (
 )
 
 import iris
+import iris.quickplot as qplt
+import cartopy
+import cartopy.crs as ccrs
 
 import os
 import logging
-import re
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 logger = logging.getLogger(os.path.basename(__file__))
@@ -33,8 +34,12 @@ def process_projections_dict(proj_dict, season):
             # extract required season
             season_con = iris.Constraint(season_number=season)
             data = v.extract(season_con)
-            # this should be a scalar cube, add the value to a dictionary
-            out_data[k] = data.data.item()
+            # if the result is a scalar cube, just store the value
+            # else store the whole cube
+            if data.ndim == 1:
+                out_data[k] = data.data.item()
+            else:
+                out_data[k] = data
     return out_data
 
 
@@ -63,18 +68,6 @@ def get_anomalies(ds_list, base_clim_start, fut_clim_start, relative=False):
         anomaly = fut_cube - base_cube
 
     return anomaly
-
-
-def save_anoms_txt(data, fname):
-    # iterate over the supplied dictionary and write the data to a textfile
-    # sort the data
-    sorted_data = sorted(data.items(), key=lambda x: x[1])
-
-    # open the file for writing
-    with open(fname, mode="x") as f:
-        for d in sorted_data:
-            # write a line of data
-            f.write(f"{d[0]}: {d[1]:.2f}\n")
 
 
 def main(cfg):
@@ -163,79 +156,51 @@ def main(cfg):
             del projections[proj]
     cordex_drivers = set(cordex_drivers)
 
-    # this section of the code does all the plotting..
+    # this section of the code does the plotting..
     # we now have all the projections in the projections dictionary
-    # check what driving models we have from CORDEX and decide on some fixed colours for them..
-    # get default colours
-    prop_cycle = plt.rcParams["axes.prop_cycle"]
-    colours = prop_cycle.by_key()["color"]
-    colours_it = enumerate(colours)
-    driver_colours = {}
-    for k in cordex_drivers:
-        driver_colours[k] = next(colours_it)[1]
 
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
     # the projections object is the key one that contains all our data..
     seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
     logger.info("Plotting")
+    extent = (
+        cfg["domain"]["start_longitude"] - 2,
+        cfg["domain"]["end_longitude"] + 2,
+        cfg["domain"]["start_latitude"] - 2,
+        cfg["domain"]["end_latitude"] + 2,
+    )
     for s in seasons.keys():
-        proj_plotting = dict.fromkeys(projections.keys())
+        # make directory
+        try:
+            os.mkdir(f"{cfg['plot_dir']}/{seasons[s]}")
+        except FileExistsError:
+            pass
         for p in projections:
-            proj_plotting[p] = process_projections_dict(projections[p], s)
-            save_anoms_txt(
-                proj_plotting[p], f"{cfg['work_dir']}/{p}_{seasons[s]}_values.txt"
-            )
+            pdata = process_projections_dict(projections[p], s)
 
-        # eventually plotting code etc. will go in a seperate module I think.
-        projects, plot_values = zip(*proj_plotting.items())
-        # plots_values is a list of dictionaries of model names and associated values
-        plt.figure(figsize=(12.8, 9.6))
-        plt.boxplot([list(v.values()) for v in plot_values])
-        plotted_drivers = set()
-        for i, p in enumerate(proj_plotting.keys()):
-            for m, v in proj_plotting[p].items():
-                if p[:6].upper() == "CORDEX":
-                    # extract the driving model from the string
-                    driver = m.split(" ")[1]
-                    color = driver_colours[driver]
-                    alpha = 1
-                    sz = 25
-                    # Check if we have already plotted this driving model before..
-                    # This means we only use the label once, and just end up with one legend entry per driver
-                    if driver in plotted_drivers:
-                        driver = None
-                    else:
-                        plotted_drivers.add(driver)
+            for m in pdata:
+                title = f"{p} {m} {seasons[s]} {var} change"
+                plt.figure(figsize=(12.8, 9.6))
+                ax = plt.axes(projection=ccrs.PlateCarree())
+                ax.set_extent(extent)
+                # set scales
+                if var == "pr":
+                    vmn = -50
+                    vmx = 50
+                    cmap = "brewer_RdYlBu_11"
                 else:
-                    driver = [cd for cd in cordex_drivers if m in cd]
-                    # check if model matches any of the CORDEX ones
-                    if driver:
-                        driver = driver[0]
-                        color = driver_colours[driver]
-                        alpha = 1
-                        sz = 25
-                        # Check if we have already plotted this driving model before..
-                        # This means we only use the label once, and just end up with one legend entry per driver
-                        if driver in plotted_drivers:
-                            driver = None
-                        else:
-                            plotted_drivers.add(driver)
-                    else:
-                        color = "k"
-                        alpha = 0.3
-                        driver = None
-                        sz = 10
-                # Add some random "jitter" to the x-axis
-                x = np.random.normal(i + 1, 0.05, size=1)
-                plt.scatter(x, v, label=driver, color=color, alpha=alpha, s=sz)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-        plt.axhline(0, linestyle="dotted", color="k")
-        plt.gca().set_xticklabels(projects)
-        plt.title(f"{seasons[s]} {var} change")
-        plt.tight_layout()
-        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
-        plt.close()
+                    vmn = 0
+                    vmx = 5
+                    cmap = "brewer_YlOrRd_09"
+                qplt.pcolormesh(pdata[m], vmin=vmn, vmax=vmx, cmap=cmap)
+                plt.title(title)
+                ax.coastlines()
+                ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
+                plt.savefig(
+                    f"{cfg['plot_dir']}/{seasons[s]}/{p}_{m}_map_{seasons[s]}.png"
+                )
+                plt.close()
 
     # print all datasets used
     print("Input models for plots:")
