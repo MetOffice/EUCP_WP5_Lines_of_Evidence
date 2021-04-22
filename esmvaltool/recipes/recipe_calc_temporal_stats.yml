@@ -169,8 +169,6 @@ dataset_groups:
   UKCP-RCM: &UKCP-RCM
   # (ensembles 2, 3 and 14 do not exist)
   - {project: UKCP18, exp: rcp85, ensemble: "01", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
-  # - {project: UKCP18, exp: rcp85, ensemble: "02", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
-  # - {project: UKCP18, exp: rcp85, ensemble: "03", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "04", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "05", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "06", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
@@ -181,7 +179,6 @@ dataset_groups:
   - {project: UKCP18, exp: rcp85, ensemble: "11", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "12", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "13", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
-  # - {project: UKCP18, exp: rcp85, ensemble: "14", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
   - {project: UKCP18, exp: rcp85, ensemble: "15", dataset: land-rcm, mip: mon, frequency: mon, domain: eur_12km}
 
   
@@ -234,12 +231,23 @@ dataset_groups:
   # - {dataset: CIESM, project: CMIP6, ensemble: r1i1p1f1, grid: gr, mip: Amon}
   # - {dataset: MCM-UA-1-0, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon} (ValueError: coordinate's range greater than coordinate's unit's modulus)
 
-region: &region
-# "common area" domain from Pichelli 2021 paper
-  start_longitude: 1
-  end_longitude: 17
-  start_latitude: 40
-  end_latitude: 50
+regions:
+  alpine: &alpine
+    # "common area" domain from Pichelli 2021 paper
+    start_longitude: 1
+    end_longitude: 17
+    start_latitude: 40
+    end_latitude: 50
+
+  solar: &solar
+    start_longitude: -15
+    end_longitude: 45
+    start_latitude: 30
+    end_latitude: 65
+  
+  # set REGION here
+  region: &region
+    <<: *solar
 
 hist_time: &hist_time
   start_year: 1981
@@ -267,7 +275,7 @@ preprocessors:
 base_vars:
   var: &var
     # CHANGE VARIABLE HERE
-    short_name: pr
+    short_name: tas
 
   vars:
     var_hist: &var_hist
