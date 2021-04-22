@@ -71,19 +71,151 @@ def save_anoms_txt(data, fname):
     sorted_data = sorted(data.items(), key=lambda x: x[1])
 
     # open the file for writing
-    with open(fname, mode="x") as f:
+    with open(fname, mode="w") as f:
         for d in sorted_data:
             # write a line of data
             f.write(f"{d[0]}: {d[1]:.2f}\n")
+
+
+def get_var(cfg):
+    # get variable processed
+    var = list(extract_variables(cfg).keys())
+    assert len(var) == 1
+    var = var[0]
+
+    return var
+
+
+def plot_boxplots(projections, cordex_drivers):
+    # we now have all the projections in the projections dictionary
+    # check what driving models we have from CORDEX and decide on some fixed colours for them..
+    # get default colours
+    prop_cycle = plt.rcParams["axes.prop_cycle"]
+    colours = prop_cycle.by_key()["color"]
+    colours_it = enumerate(colours)
+    driver_colours = {}
+    for k in cordex_drivers:
+        driver_colours[k] = next(colours_it)[1]
+
+    # special models that have an extra large symbol
+    # special_models = ["RACMO22E", "HadREM3-GA7-05"]
+    special_models = []
+
+    # get variable for title later
+    var = get_var(cfg)
+
+    # now lets plot them
+    # first we need to process the dictionary, and move the data into a list of vectors
+    # the projections object is the key one that contains all our data..
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
+    logger.info("Plotting")
+    for s in seasons.keys():
+        proj_plotting = dict.fromkeys(projections.keys())
+        for p in projections:
+            proj_plotting[p] = process_projections_dict(projections[p], s)
+            save_anoms_txt(
+                proj_plotting[p], f"{cfg['work_dir']}/{p}_{seasons[s]}_values.txt"
+            )
+
+        # eventually plotting code etc. will go in a seperate module I think.
+        projects, plot_values = zip(*proj_plotting.items())
+        # plots_values is a list of dictionaries of model names and associated values
+        plt.figure(figsize=(12.8, 9.6))
+        plt.boxplot([list(v.values()) for v in plot_values])
+        plotted_drivers = set()
+        for i, p in enumerate(proj_plotting.keys()):
+            for m, v in proj_plotting[p].items():
+                if p[:6].upper() == "CORDEX":
+                    # extract the driving model from the string
+                    driver = m.split(" ")[1]
+                    color = driver_colours[driver]
+                    alpha = 1
+                    if any(i in m for i in special_models):
+                        sz = 100
+                    else:
+                        sz = 25
+                    # Check if we have already plotted this driving model before..
+                    # This means we only use the label once, and just end up with one legend entry per driver
+                    if driver in plotted_drivers:
+                        driver = None
+                    else:
+                        plotted_drivers.add(driver)
+                else:
+                    driver = [cd for cd in cordex_drivers if m in cd]
+                    # check if model matches any of the CORDEX ones
+                    if driver:
+                        driver = driver[0]
+                        color = driver_colours[driver]
+                        alpha = 1
+                        sz = 25
+                        # Check if we have already plotted this driving model before..
+                        # This means we only use the label once, and just end up with one legend entry per driver
+                        if driver in plotted_drivers:
+                            driver = None
+                        else:
+                            plotted_drivers.add(driver)
+                    else:
+                        color = "k"
+                        alpha = 0.3
+                        driver = None
+                        sz = 10
+                # Add some random "jitter" to the x-axis
+                x = np.random.normal(i + 1, 0.05, size=1)
+                plt.scatter(x, v, label=driver, color=color, alpha=alpha, s=sz)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.axhline(0, linestyle="dotted", color="k")
+        plt.gca().set_xticklabels(projects)
+        plt.title(f"{seasons[s]} {var} change")
+        plt.tight_layout()
+        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
+        plt.close()
+
+
+def simple_dots_plot(projections, cordex_drivers):
+    # get variable for title later
+    var = get_var(cfg)
+
+    # now lets plot them
+    # first we need to process the dictionary, and move the data into a list of vectors
+    # the projections object is the key one that contains all our data..
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
+    logger.info("Plotting")
+    for s in seasons.keys():
+        proj_plotting = dict.fromkeys(projections.keys())
+        for p in projections:
+            proj_plotting[p] = process_projections_dict(projections[p], s)
+            save_anoms_txt(
+                proj_plotting[p], f"{cfg['work_dir']}/{p}_{seasons[s]}_values.txt"
+            )
+
+        # plots_values is a list of dictionaries of model names and associated values
+        plt.figure(figsize=(12.8, 9.6))
+        for i, p in enumerate(proj_plotting.keys()):
+            for m, v in proj_plotting[p].items():
+                if p == "CMIP5":
+                    if any(m in d for d in cordex_drivers):
+                        fs = "full"
+                        x = i + 0.1
+                    else:
+                        fs = "none"
+                        x = i - 0.1
+                else:
+                    fs = "none"
+                    x = i
+                plt.plot(x, v, marker="o", fillstyle=fs)
+        plt.gca().set_xticks(range(len(proj_plotting)))
+        plt.gca().set_xticklabels(proj_plotting.keys())
+        plt.title(f"{seasons[s]} {var} change")
+        plt.tight_layout()
+        plt.savefig(f"{cfg['plot_dir']}/dots_{seasons[s]}.png")
+        plt.close()
 
 
 def main(cfg):
     # The config object is a dict of all the metadata from the pre-processor
 
     # get variable processed
-    var = list(extract_variables(cfg).keys())
-    assert len(var) == 1
-    var = var[0]
+    var = get_var(cfg)
 
     if var == "pr":
         rel_change = True
@@ -164,78 +296,8 @@ def main(cfg):
     cordex_drivers = set(cordex_drivers)
 
     # this section of the code does all the plotting..
-    # we now have all the projections in the projections dictionary
-    # check what driving models we have from CORDEX and decide on some fixed colours for them..
-    # get default colours
-    prop_cycle = plt.rcParams["axes.prop_cycle"]
-    colours = prop_cycle.by_key()["color"]
-    colours_it = enumerate(colours)
-    driver_colours = {}
-    for k in cordex_drivers:
-        driver_colours[k] = next(colours_it)[1]
-
-    # now lets plot them
-    # first we need to process the dictionary, and move the data into a list of vectors
-    # the projections object is the key one that contains all our data..
-    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
-    logger.info("Plotting")
-    for s in seasons.keys():
-        proj_plotting = dict.fromkeys(projections.keys())
-        for p in projections:
-            proj_plotting[p] = process_projections_dict(projections[p], s)
-            save_anoms_txt(
-                proj_plotting[p], f"{cfg['work_dir']}/{p}_{seasons[s]}_values.txt"
-            )
-
-        # eventually plotting code etc. will go in a seperate module I think.
-        projects, plot_values = zip(*proj_plotting.items())
-        # plots_values is a list of dictionaries of model names and associated values
-        plt.figure(figsize=(12.8, 9.6))
-        plt.boxplot([list(v.values()) for v in plot_values])
-        plotted_drivers = set()
-        for i, p in enumerate(proj_plotting.keys()):
-            for m, v in proj_plotting[p].items():
-                if p[:6].upper() == "CORDEX":
-                    # extract the driving model from the string
-                    driver = m.split(" ")[1]
-                    color = driver_colours[driver]
-                    alpha = 1
-                    sz = 25
-                    # Check if we have already plotted this driving model before..
-                    # This means we only use the label once, and just end up with one legend entry per driver
-                    if driver in plotted_drivers:
-                        driver = None
-                    else:
-                        plotted_drivers.add(driver)
-                else:
-                    driver = [cd for cd in cordex_drivers if m in cd]
-                    # check if model matches any of the CORDEX ones
-                    if driver:
-                        driver = driver[0]
-                        color = driver_colours[driver]
-                        alpha = 1
-                        sz = 25
-                        # Check if we have already plotted this driving model before..
-                        # This means we only use the label once, and just end up with one legend entry per driver
-                        if driver in plotted_drivers:
-                            driver = None
-                        else:
-                            plotted_drivers.add(driver)
-                    else:
-                        color = "k"
-                        alpha = 0.3
-                        driver = None
-                        sz = 10
-                # Add some random "jitter" to the x-axis
-                x = np.random.normal(i + 1, 0.05, size=1)
-                plt.scatter(x, v, label=driver, color=color, alpha=alpha, s=sz)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-        plt.axhline(0, linestyle="dotted", color="k")
-        plt.gca().set_xticklabels(projects)
-        plt.title(f"{seasons[s]} {var} change")
-        plt.tight_layout()
-        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
-        plt.close()
+    plot_boxplots(projections, cordex_drivers)
+    simple_dots_plot(projections, cordex_drivers)
 
     # print all datasets used
     print("Input models for plots:")
