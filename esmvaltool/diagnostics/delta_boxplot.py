@@ -195,19 +195,21 @@ def simple_dots_plot(projections, cordex_drivers):
                 if p == "CMIP5":
                     if any(m in d for d in cordex_drivers):
                         fs = "full"
-                        x = i + 0.1
+                        x = i + 0.05
                     else:
                         fs = "none"
-                        x = i - 0.1
+                        x = i - 0.05
                 else:
                     fs = "none"
                     x = i
-                plt.plot(x, v, marker="o", fillstyle=fs)
-        plt.gca().set_xticks(range(len(proj_plotting)))
-        plt.gca().set_xticklabels(proj_plotting.keys())
+                plt.plot(x + 1, v, marker="o", fillstyle=fs, color="k")
+        projects, values = zip(*proj_plotting.items())
+        plt.violinplot([list(v.values()) for v in values], showmedians=True)
+        plt.gca().set_xticks(range(1, len(projects) + 1))
+        plt.gca().set_xticklabels(projects)
         plt.title(f"{seasons[s]} {var} change")
         plt.tight_layout()
-        plt.savefig(f"{cfg['plot_dir']}/dots_{seasons[s]}.png")
+        plt.savefig(f"{cfg['plot_dir']}/violin_{seasons[s]}.png")
         plt.close()
 
 

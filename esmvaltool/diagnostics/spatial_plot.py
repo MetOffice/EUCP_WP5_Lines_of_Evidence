@@ -190,8 +190,8 @@ def main(cfg):
                     vmx = 50
                     cmap = "brewer_RdYlBu_11"
                 else:
-                    vmn = 0
-                    vmx = 5
+                    vmn = 0.5
+                    vmx = 8
                     cmap = "brewer_YlOrRd_09"
                 qplt.pcolormesh(pdata[m], vmin=vmn, vmax=vmx, cmap=cmap)
                 plt.title(title)
