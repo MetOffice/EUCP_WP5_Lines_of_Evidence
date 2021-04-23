@@ -9,6 +9,7 @@
 # rsync to JASMIN. Something like this:
 # rsync -anv /project/ciid/projects/EUCP/wp5/UKCP18/ tcrocker@xfer1.jasmin.ac.uk:~/EUCP/UKCP18/
 import iris
+from numpy.core.fromnumeric import var
 from catnip.preparation import add_aux_unrotated_coords
 
 import os
@@ -33,6 +34,21 @@ def fix_lon_lat_names(cube):
     return cube
 
 
+def var_fixes(cube):
+    # variable specific fixes
+    if cube.var_name == "tas":
+        height_c = iris.coords.Coord(1.5, "height", units="m")
+        cube.add_aux_coord(height_c)
+        cube.convert_units("K")
+    elif cube.var_name == "pr":
+        # check units and convert if necessary
+        if cube.units == "mm/day":
+            cube.data = cube.data / 86400
+            cube.units = "kg m-2 s-1"
+
+    return cube
+
+
 def fix_gcm_file(f):
     # Fix the netCDF file located at f
     # return a fixed cube
@@ -48,16 +64,7 @@ def fix_gcm_file(f):
     # remove unneeded coords
     new_c = remove_unneeded_coords(new_c)
 
-    # variable specific fixes
-    if new_c.var_name == "tas":
-        height_c = iris.coords.Coord(1.5, "height", units="m")
-        new_c.add_aux_coord(height_c)
-        new_c.convert_units("K")
-    elif new_c.var_name == "pr":
-        # check units and convert if necessary
-        if new_c.units == "mm/day":
-            new_c.data = new_c.data / 86400
-            new_c.units = "kg m-2 s-1"
+    new_c = var_fixes(new_c)
 
     return new_c
 
@@ -81,16 +88,7 @@ def fix_rcm_file(f):
     # remove unneeded coords
     new_c = remove_unneeded_coords(new_c)
 
-    # variable specific fixes
-    if new_c.var_name == "tas":
-        height_c = iris.coords.Coord(1.5, "height", units="m")
-        new_c.add_aux_coord(height_c)
-        new_c.convert_units("K")
-    elif new_c.var_name == "pr":
-        # check units and convert if necessary
-        if new_c.units == "mm/day":
-            new_c.data = new_c.data / 86400
-            new_c.units = "kg m-2 s-1"
+    new_c = var_fixes(new_c)
 
     return new_c
 
