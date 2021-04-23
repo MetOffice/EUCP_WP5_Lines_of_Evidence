@@ -5,6 +5,9 @@
 # /project/spice/ukcp18/GA7/COUPLED/ukcp18_monthly/land-gcm/global/60km/
 # 2nd argument, output files path e.g.
 # /project/ciid/projects/EUCP/wp5/UKCP/land-gcm/
+
+# rsync to JASMIN. Something like this:
+# rsync -anv /project/ciid/projects/EUCP/wp5/UKCP18/ tcrocker@xfer1.jasmin.ac.uk:~/EUCP/UKCP18/
 import iris
 from catnip.preparation import add_aux_unrotated_coords
 
