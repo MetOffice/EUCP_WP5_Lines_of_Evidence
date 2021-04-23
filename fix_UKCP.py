@@ -9,7 +9,6 @@
 # rsync to JASMIN. Something like this:
 # rsync -anv /project/ciid/projects/EUCP/wp5/UKCP18/ tcrocker@xfer1.jasmin.ac.uk:~/EUCP/UKCP18/
 import iris
-from numpy.core.fromnumeric import var
 from catnip.preparation import add_aux_unrotated_coords
 
 import os
