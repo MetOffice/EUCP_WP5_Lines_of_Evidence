@@ -193,7 +193,7 @@ def main(cfg):
                     vmn = 0.5
                     vmx = 8
                     cmap = "brewer_YlOrRd_09"
-                qplt.pcolormesh(pdata[m], vmin=vmn, vmax=vmx, cmap=cmap)
+                qplt.pcolor(pdata[m], vmin=vmn, vmax=vmx, cmap=cmap)
                 plt.title(title)
                 ax.coastlines()
                 ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
