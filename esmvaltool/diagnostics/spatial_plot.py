@@ -193,7 +193,15 @@ def main(cfg):
                     vmn = 0.5
                     vmx = 8
                     cmap = "brewer_YlOrRd_09"
-                qplt.pcolor(pdata[m], vmin=vmn, vmax=vmx, cmap=cmap)
+                # ensure longitude coordinates straddle the meridian for GCM origin data
+                if pdata[m].coord("longitude").ndim == 1:
+                    # TODO This will probably cause issues if it's ever run with data
+                    # that straddles the dateline, so a check should be added.
+                    plot_cube = pdata[m].intersection(longitude=(-180.0, 180.0))
+                    plot_cube.coord("longitude").circular = False
+                else:
+                    plot_cube = pdata[m]
+                qplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
                 plt.title(title)
                 ax.coastlines()
                 ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
