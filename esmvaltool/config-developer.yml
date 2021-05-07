@@ -246,7 +246,7 @@ cordex-fpsc:
 UKCP18:
   input_dir:
     default: "{dataset}/{domain}/{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
-  input_file: "{short_name}_{exp}_{dataset}_{domain}_{ensemble}_{frequency}_*.nc"
+  input_file: "{short_name}_{exp}_{dataset}_{domain}_{ensemble}_{frequency}*.nc"
   output_file: "{dataset}_{short_name}_{exp}_{dataset}_{domain}_{ensemble}_{frequency}"
   cmor_type: "CMIP6"
   cmor_strict: false
