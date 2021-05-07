@@ -265,6 +265,10 @@ preprocessors:
       period: season
     extract_region:
       <<: *region
+    mask_landsea:
+      mask_out: sea
+      fx_variables:
+        - {short_name: sftlf, ensemble: "r*"}
 
   season_area_mean_proc: 
     <<: *season_proc
