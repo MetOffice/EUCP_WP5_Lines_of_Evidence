@@ -25,6 +25,9 @@ if TYPE == "RCM":
         UKCP_rcm_lf,
         "/project/ciid/projects/EUCP/wp5/UKCP18/land-rcm/eur_12km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-rcm_eur_12km_00_fx.nc",
     )
+    # then need to run these NCO commands to fix last bits of metadata. This could be done with iris.
+    # ncrename -v land_area_fraction,sftlf /project/ciid/projects/EUCP/wp5/UKCP18/land-rcm/eur_12km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-rcm_eur_12km_00_fx.nc
+    #
 else:
     orog = iris.load_cube(
         "/project/ciid/projects/EUCP/wp5/UKCP18/land-gcm/qrparm.orog.nc"
@@ -47,3 +50,8 @@ else:
         lsm,
         "/project/ciid/projects/EUCP/wp5/UKCP18/land-gcm/global_60km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-gcm_global_60km_00_fx.nc",
     )
+
+    # Also need to run some nco commands to fix attributes since we've converted an orog field to sftlf these could be moved to iris commands
+    # ncrename -v ht,sftlf /project/ciid/projects/EUCP/wp5/UKCP18/land-gcm/global_60km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-gcm_global_60km_00_fx.nc
+    # ncatted -a standard_name,sftlf,o,c,land_area_fraction /project/ciid/projects/EUCP/wp5/UKCP18/land-gcm/global_60km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-gcm_global_60km_00_fx.nc
+    # ncatted -a long_name,sftlf,o,c,"Percentage of the Grid Cell Occupied by Land (Including Lakes)" /project/ciid/projects/EUCP/wp5/UKCP18/land-gcm/global_60km/rcp85/00/sftlf/fx/latest/sftlf_rcp85_land-gcm_global_60km_00_fx.nc
