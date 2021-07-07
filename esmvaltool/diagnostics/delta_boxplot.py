@@ -16,7 +16,27 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 
+from cycler import cycler
+
 logger = logging.getLogger(os.path.basename(__file__))
+
+# Institutes that appear in front of the driver string for CORDEX RCMS
+INSTITUTES = [
+    'IPSL',
+    'NCC',
+    'MPI-M',
+    'CNRM-CERFACS',
+    'ICHEC',
+    'MOHC'
+]
+
+CPM_DRIVERS = {
+    'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
+    'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
+    'HCLIMcom-HCLIM38-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
+    'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR'
+}
 
 
 def process_projections_dict(proj_dict, season):
@@ -88,16 +108,20 @@ def get_var(cfg):
     return var
 
 
-def plot_boxplots(projections, legend_models):
+def plot_boxplots(projections, legend_models, fname_suffix=None):
     # we now have all the projections in the projections dictionary
     # check what driving models we have from CORDEX and decide on some fixed colours for them..
     # get default colours
     prop_cycle = plt.rcParams["axes.prop_cycle"]
     colours = prop_cycle.by_key()["color"]
-    colours_it = enumerate(colours)
+    p_cycler = (cycler(color=colours) * cycler(marker=["o", "D", "P", "X"]))
+    enum_props = enumerate(p_cycler)
     legend_colours = {}
+    legend_markers = {}
     for k in legend_models:
-        legend_colours[k] = next(colours_it)[1]
+        k_props = next(enum_props)
+        legend_colours[k] = k_props[1]['color']
+        legend_markers[k] = k_props[1]['marker']
 
     # special models that have an extra large symbol
     # special_models = ["RACMO22E", "HadREM3-GA7-05"]
@@ -105,9 +129,6 @@ def plot_boxplots(projections, legend_models):
 
     # get variable for title later
     var = get_var(cfg)
-
-    # plot legend type
-    legend_type = cfg['cordex_legend_type']
 
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
@@ -134,12 +155,15 @@ def plot_boxplots(projections, legend_models):
                 if p[:6].upper() == "CORDEX":
                     # extract the driving model and RCM from the string
                     rcm, driver = m.split(" ")
-                    if legend_type == 'driver':
-                        color = legend_colours[driver]
+                    # find the legend color
+                    if driver in legend_colours.keys():
                         label = driver
+                        color = legend_colours[driver]
+                        marker = legend_markers[driver]
                     else:
-                        color = legend_colours[rcm]
                         label = rcm
+                        color = legend_colours[rcm]
+                        marker = legend_markers[rcm]
                     alpha = 1
                     if any(i in m for i in special_models):
                         sz = 100
@@ -169,25 +193,27 @@ def plot_boxplots(projections, legend_models):
                         color = "k"
                         alpha = 0.3
                         label = None
+                        marker = "."
                         sz = 10
                 else:
                     color = "k"
                     alpha = 0.3
                     label = None
+                    marker = "."
                     sz = 10
                 # Add some random "jitter" to the x-axis
                 x = np.random.normal(i + 1, 0.05, size=1)
-                plt.scatter(x, v, label=label, color=color, alpha=alpha, s=sz)
+                plt.scatter(x, v, label=label, color=color, alpha=alpha, s=sz, marker=marker)
         plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
         plt.axhline(0, linestyle="dotted", color="k")
         plt.gca().set_xticklabels(projects)
         plt.title(f"{seasons[s]} {var} change")
         plt.tight_layout()
-        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}.png")
+        plt.savefig(f"{cfg['plot_dir']}/boxplot_{seasons[s]}{fname_suffix}.png")
         plt.close()
 
 
-def simple_dots_plot(projections, cordex_drivers):
+def simple_dots_plot(projections, cordex_drivers, fname_suffix=''):
     # get variable for title later
     var = get_var(cfg)
 
@@ -209,22 +235,33 @@ def simple_dots_plot(projections, cordex_drivers):
         projects, values = zip(*proj_plotting.items())
         for i, p in enumerate(p_keys):
             for m, v in proj_plotting[p].items():
-                if p == "CMIP5":
-                    if any(m in d for d in cordex_drivers):
-                        plt.plot(i + 1,
-                                 v,
-                                 marker="o",
-                                 fillstyle="full",
-                                 color="k",
-                                 markersize=12)
-                if 'CMIP' not in p:
-                    plt.plot(
+                plt.plot(
                         i + 1,
                         v,
                         marker="o",
                         fillstyle="none",
                         color="k",
                     )
+                if p == "CMIP5":
+                    if any(m in d for d in cordex_drivers):
+                        plt.plot(
+                            i + 1,
+                            v,
+                            marker="o",
+                            fillstyle="full",
+                            color="k",
+                            markersize=12,
+                        )
+                elif "CORDEX" in p:
+                    if any(m == d for d in cordex_drivers):
+                        plt.plot(
+                            i + 1,
+                            v,
+                            marker="o",
+                            fillstyle="full",
+                            color="k",
+                            markersize=12,
+                        )
             if 'CMIP' in p:
                 plt.violinplot(list(values[i].values()),
                                positions=[i + 1],
@@ -233,8 +270,125 @@ def simple_dots_plot(projections, cordex_drivers):
         plt.gca().set_xticklabels(projects)
         plt.title(f"{seasons[s]} {var} change")
         plt.tight_layout()
-        plt.savefig(f"{cfg['plot_dir']}/violin_{seasons[s]}.png")
+        plt.savefig(f"{cfg['plot_dir']}/violin_{seasons[s]}{fname_suffix}.png")
         plt.close()
+
+
+def prepare_scatter_data(x_data, y_data, project):
+    # need to establish matching cmip value for each cordex value
+    # cordex data keyed by RCM, then GCM
+    x_vals = []
+    y_vals = []
+    labels = []
+
+    if project == "CORDEX":
+        for rcm in x_data:
+            for driver in x_data[rcm]:
+                x_vals.append(x_data[rcm][driver])
+
+                # find corresponding cmip data
+                actual_driver = remove_institute_from_driver(driver)
+                y_vals.append(y_data[actual_driver])
+
+                # construct label
+                labels.append(f"{actual_driver} {rcm}")
+    elif project == "UKCP18":
+        for ensemble in x_data:
+            x_vals.append(x_data[ensemble])
+            y_vals.append(y_data[ensemble])
+
+            labels.append(ensemble)
+    elif project == "CPM":
+        for cpm in x_data:
+            for driver in x_data[cpm]:
+                x_vals.append(x_data[cpm][driver])
+
+                actual_driver = CPM_DRIVERS[cpm]
+                rcm, sep, gcm = actual_driver.partition(' ')
+                y_vals.append(y_data[rcm][gcm])
+                
+                # construct label
+                labels.append(f"{actual_driver} {cpm}")
+    else:
+        raise ValueError(f"Unrecognised project {project}")
+
+    return x_vals, y_vals, labels
+
+
+def scatter_response(x_data, y_data, labels, suffix='', full_y=None):
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
+    for s in seasons.keys():
+        # construct iris constraint
+        season_con = iris.Constraint(season_number=s)
+        plt.figure(figsize=(12.8, 9.6))
+        legends = []
+        max_val = 0
+        min_val = 0
+
+        if full_y:
+            y_data = full_y.extract(season_con).data
+            x_data = []
+
+        # construct axes
+        if full_y:
+            ax_scatter = plt.subplot(222)
+            ax_y = plt.subplot(221, sharey=ax_scatter)
+            ax_x = plt.subplot(224, sharex=ax_scatter)
+        else:
+            ax_scatter = plt.axes()
+
+        for i in range(len(x_data)):
+            x_val = x_data[i].extract(season_con).data
+            y_val = y_data[i].extract(season_con).data
+
+            if full_y:
+                x_data.append(x_val)
+            
+            # update max and min value encountered
+            max_val = max(x_val, y_val, max_val)
+            min_val = min(x_val, y_val, min_val)
+
+            ax_scatter.scatter(x_val, y_val)
+
+            if labels[i].isdigit():
+                ax_scatter.text(x_val, y_val, labels[i])
+            else:
+                ax_scatter.text(x_val, y_val, i)
+                legends.append(f"{i} - {labels[i]}")
+                ax_scatter.legend(legends)
+
+        ax_scatter.xlabel("RCM response")
+        ax_scatter.ylabel("Driver response")
+        ax_scatter.title(f"{get_var(cfg)} response")
+
+        # plot a diagonal equivalence line
+        ax_scatter.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
+
+        if full_y:
+            # boxplots
+            ax_y.boxplot(y_data)
+            ax_y.axis('off')
+            ax_x.boxplot(x_data, vert=False)
+            ax_x.axis('off')
+
+        # save
+        plt.savefig(f"{cfg['plot_dir']}/scatter_{seasons[s]}{suffix}.png")
+        plt.close()
+
+
+def remove_institute_from_driver(driver_str):
+    # remove the institute bit from the "driver" string
+
+    new_str = driver_str
+    # loop through the institutes and remove them if found
+    for i in INSTITUTES:
+        i = '^' + i + '-'
+        new_str = re.sub(i, '', new_str)
+
+    if new_str == driver_str:
+        raise ValueError(f"No institute found to remove from {driver_str}")
+
+    return new_str
 
 
 def reorder_keys(keys):
@@ -292,6 +446,7 @@ def main(cfg):
     model_lists = {}
     cordex_drivers = []
     cordex_rcms = []
+    rcm_drivers = cfg['rcm_drivers']
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -347,8 +502,9 @@ def main(cfg):
 
         # seperate CORDEX RCMs into special and normal if needed
         if spec_rcms and proj[:6].upper() == "CORDEX":
-            # create new dictionary entry
-            projections['CORDEX_aerosol'] = {}
+            # create new dictionary entry if needed
+            if 'CORDEX_aerosol' not in projections:
+                projections['CORDEX_aerosol'] = {}
             for m in models:
                 if m in spec_rcms:
                     data = projections[proj].pop(m)
@@ -360,14 +516,36 @@ def main(cfg):
     cordex_drivers = set(cordex_drivers)
     cordex_rcms = set(cordex_rcms)
 
-    if cfg['cordex_legend_type'] == 'driver':
-        legend_models = cordex_drivers
-    else:
-        legend_models = cordex_rcms
-
     # this section of the code does all the plotting..
-    plot_boxplots(projections, legend_models)
-    simple_dots_plot(projections, cordex_drivers)
+    plot_boxplots(projections, cordex_drivers, "_drivers")
+    plot_boxplots(projections, cordex_rcms, "_rcms")
+    simple_dots_plot(projections, list(cordex_drivers) + rcm_drivers)
+
+    # scatter plots - regular cordex
+    rcm_points, gcm_points, labels = prepare_scatter_data(
+        projections["CORDEX"], projections["CMIP5"], "CORDEX"
+        )
+    scatter_response(rcm_points, gcm_points, labels, "_cordex_simple_aerosol")
+
+    # cordex with clever aerosol
+    rcm_points, gcm_points, labels = prepare_scatter_data(
+        projections["CORDEX_aerosol"], projections["CMIP5"], "CORDEX"
+        )
+    scatter_response(rcm_points, gcm_points, labels, "_cordex_dynamic_aerosol")
+
+    # UKCP
+    rcm_points, gcm_points, labels = prepare_scatter_data(
+        projections["UKCP18 land-rcm"], projections["UKCP18 land-gcm"], "UKCP18"
+        )
+    scatter_response(rcm_points, gcm_points, labels, "_UKCP")
+
+    # CPMs
+    all_cordex = projections["CORDEX"].copy()
+    all_cordex.update(projections["CORDEX_aerosol"])
+    rcm_points, gcm_points, labels = prepare_scatter_data(
+        projections["cordex-cpm"], all_cordex, "CPM"
+        )
+    scatter_response(rcm_points, gcm_points, labels, "_cpm")
 
     # print all datasets used
     print("Input models for plots:")
