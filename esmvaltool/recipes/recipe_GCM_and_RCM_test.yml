@@ -32,7 +32,7 @@ dataset_groups:
   - {dataset: CCSM4, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CESM1-BGC, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CESM1-CAM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-  # - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon} missing pr
+  - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon}
   - {dataset: CMCC-CM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CMCC-CMS, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CMCC-CESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
@@ -77,16 +77,14 @@ dataset_groups:
   - {institute: CLMcom, driver: MPI-M-MPI-ESM-LR, dataset: CCLM4-8-17, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: CLMcom, driver: ICHEC-EC-EARTH, dataset: CCLM4-8-17, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
-  # These files are missing bounds on lat and lon so regridding doesn't currently work (fixed by #184)
   - {institute: SMHI, driver: CNRM-CERFACS-CNRM-CM5, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: SMHI, driver: MOHC-HadGEM2-ES, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: SMHI, driver: MPI-M-MPI-ESM-LR, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1a, domain: EUR-11}
   - {institute: SMHI, driver: IPSL-IPSL-CM5A-MR, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  # Paper uses ensemble r12i1p1 not r1i1p1
+  # # Paper uses ensemble r12i1p1 not r1i1p1
   - {institute: SMHI, driver: ICHEC-EC-EARTH, dataset: RCA4, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: SMHI, driver: NCC-NorESM1-M, dataset: RCA4, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
-  # These files are missing bounds on lat and lon (fixed by #184)
   - {institute: KNMI, driver: CNRM-CERFACS-CNRM-CM5, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: KNMI, driver: MOHC-HadGEM2-ES, dataset: RACMO22E, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   # paper doesn't use these two
@@ -103,23 +101,23 @@ dataset_groups:
   - {institute: DMI, driver: ICHEC-EC-EARTH, dataset: HIRHAM5, project: CORDEX, ensemble: r3i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: DMI, driver: NCC-NorESM1-M, dataset: HIRHAM5, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v3, domain: EUR-11}
     
-  # TODO Need to find IPSL driven WRF331F run
+  # # TODO Need to find IPSL driven WRF331F run? Not sure what it is as it
 
   - {institute: MPI-CSC, driver: MPI-M-MPI-ESM-LR, dataset: REMO2009, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
     
   - {institute: GERICS, driver: NCC-NorESM1-M, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  # - {institute: GERICS, driver: CNRM-CERFACS-CNRM-CM5, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
-  # - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  # - {institute: GERICS, driver: IPSL-IPSL-CM5A-MR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  - {institute: GERICS, driver: CNRM-CERFACS-CNRM-CM5, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
+  # - {institute: GERICS, driver: IPSL-IPSL-CM5A-LR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} # Missing data?
+  - {institute: GERICS, driver: IPSL-IPSL-CM5A-MR, dataset: REMO2015, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
+  # Need to run a managecmip job for this dataset
   - {institute: GERICS, driver: MPI-M-MPI-ESM-LR, dataset: REMO2015, project: CORDEX, ensemble: r3i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
-  # - {institute: GERICS, driver: NOAA-GFDL-GFDL-ESM2G, dataset: REMO2015, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - missing
+  # - {institute: GERICS, driver: NOAA-GFDL-GFDL-ESM2G, dataset: REMO2015, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
 
-  # - {institute: ICTP, driver: MPI-M-MPI-ESM-LR, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - FX file needed
+  - {institute: ICTP, driver: MPI-M-MPI-ESM-LR, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: ICTP, driver: MOHC-HadGEM2-ES, dataset: RegCM4-6, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
-  # - {institute: RMIB-UGent, driver: CNRM-CERFACS-CNRM-CM5, dataset: ALARO-0, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11} - Complains FX file needed to do area stats
+  - {institute: RMIB-UGent, driver: CNRM-CERFACS-CNRM-CM5, dataset: ALARO-0, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
-  # MOHC runs currently require check-level=relaxed
   - {institute: MOHC, driver: CNRM-CERFACS-CNRM-CM5, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v2, domain: EUR-11}
   - {institute: MOHC, driver: MOHC-HadGEM2-ES, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: MOHC, driver: MPI-M-MPI-ESM-LR, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
@@ -127,9 +125,6 @@ dataset_groups:
   - {institute: MOHC, driver: NCC-NorESM1-M, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
   # CPM models (also using CMIP5 conventions)
-  # CORDEX-FPSC: &CORDEX-FPSC
-  # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-fpsc, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
-
   CORDEX-cpm: &CORDEX-CPM
   # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
   - {
@@ -140,7 +135,7 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: x2yn2v1,
-    } # Driving RCM: CCLM4 - EC-EARTH
+    }
   - {
       project: cordex-cpm,
       ensemble: r12i1p1,
@@ -149,7 +144,7 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: fpsconv-x2yn2-v1,
-    } # Driving RCM: RACMO - EC-EARTH
+    }
   - {
       project: cordex-cpm,
       ensemble: r1i1p1,
@@ -158,7 +153,7 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: 5.0_2019.1,
-    } # Driving RCM: CCLM4 - MPI
+    }
   - {
       project: cordex-cpm,
       ensemble: r1i1p1,
@@ -167,7 +162,7 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: fpsconv-x2yn2-v1,
-    } # Driving RCM: ALADIN63 - CNRM-CM5
+    }
   - {
       project: cordex-cpm,
       ensemble: r1i1p1,
@@ -176,10 +171,11 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: v1,
-    } # Driving RCM: REMO2015 - MPI-ESM-LR
+    }
+  # How to handle KNMI different ensemble member???
 
-  # future timeslice of 2040-2049 differs from others and needs special handling.
   CORDEX-cpm_2: &CORDEX-CPM2
+    # For this model the future timeslice is 2040-2049 rather than 2041-2050 :-/
   - {
       project: cordex-cpm,
       ensemble: r1i1p1,
@@ -188,19 +184,7 @@ dataset_groups:
       mip: mon,
       domain: ALP-3,
       rcm_version: v0,
-    } # Driver RegCM4-6 HadGEM2-ES (actually RegCM4-7-0)
-
-  # differing ensemble numbers for past and future need special handling
-  # (historical ensemble 14, future ensemble 13)
-  CORDEX-cpm3: &CORDEX-CPM3
-  - {
-      project: cordex-cpm,
-      dataset: KNMI-HCLIM38h1-AROME,
-      driver: KNMI-EC-EARTH,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: fpsconv-x2yn2-v1,
-    } # Driver RACMO22E - EC-EARTH (technically it's RACMO23E, not available on CEDA)
+    }
 
   UKCP-GCM: &UKCP-GCM
   - {project: UKCP18, exp: rcp85, ensemble: "01", dataset: land-gcm, mip: mon, frequency: mon, domain: global_60km}
@@ -268,7 +252,7 @@ dataset_groups:
   - {dataset: MIROC6, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: MIROC-ES2L, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon}
   - {dataset: HadGEM3-GC31-LL, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
-  # - {dataset: HadGEM3-GC31-MM, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon} - some missing pr
+  - {dataset: HadGEM3-GC31-MM, project: CMIP6, ensemble: r1i1p1f3, grid: gn, mip: Amon}
   - {dataset: UKESM1-0-LL, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon}
   - {dataset: MPI-ESM1-2-LR, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
   - {dataset: MRI-ESM2-0, project: CMIP6, ensemble: r1i1p1f1, grid: gn, mip: Amon}
@@ -320,75 +304,45 @@ fut_time_2: &fut_time2
   start_year: 2040
   end_year: 2049
 
+
 preprocessors:
-  regrid_GCM: &regrid_GCM
-    regrid:
-      target_grid:
-        <<: *region
-        step_longitude: 1.5
-        step_latitude: 1.5
-      scheme: linear
-
-  regrid_RCM: &regrid_RCM
-    regrid:
-      target_grid:
-        <<: *region
-        step_longitude: 0.11
-        step_latitude: 0.11
-      scheme: linear
-
-  regrid_CPM: &regrid_CPM
-    regrid:
-      target_grid:
-        <<: *region
-        step_longitude: 0.0275
-        step_latitude: 0.0275
-      scheme: linear
-
-  season_spatial_proc_GCM:
+  season_proc: &season_proc
     custom_order: true
     climate_statistics:
       operator: mean
       period: season
-    <<: *regrid_GCM
-    mask_landsea:
-      mask_out: sea
-    
-  season_spatial_proc_RCM:
-    custom_order: true
-    climate_statistics:
-      operator: mean
-      period: season
-    <<: *regrid_RCM
-    mask_landsea:
-      mask_out: sea
-
-  season_spatial_proc_CPM:
-    custom_order: true
-    climate_statistics:
-      operator: mean
-      period: season
-    <<: *regrid_CPM
-    mask_landsea:
-      mask_out: sea
-
-  season_area_mean_proc:
-    custom_order: true
     extract_region:
       <<: *region
-    climate_statistics:
-      operator: mean
-      period: season
-    # the regrid is necessary because of awkward grids with some of the RCM data
-    # which will prevent calculating area statistics.
     regrid:
       target_grid:
-        <<: *region
+        <<: *alpine
         step_longitude: 1.5
         step_latitude: 1.5
       scheme: linear
     mask_landsea:
       mask_out: sea
+      # fx_variables:
+      #   - {short_name: sftlf, ensemble: "*", exp: "*"}
+
+  season_mm_stats_proc: &season_mm_stats_proc
+    custom_order: true
+    regrid:
+      target_grid:
+        <<: *alpine
+        step_longitude: 1.5
+        step_latitude: 1.5
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+    multi_model_statistics:
+      span: overlap
+      statistics: [mean, median, std]
+    climate_statistics:
+      operator: mean
+      period: season
+
+  season_area_mean_proc: 
+    <<: *season_proc
     area_statistics:
       operator: mean
 
@@ -396,7 +350,7 @@ preprocessors:
 base_vars:
   var: &var
     # CHANGE VARIABLE HERE
-    short_name: pr
+    short_name: tas
 
   vars:
     var_hist: &var_hist
@@ -429,71 +383,71 @@ diagnostics:
   boxplots:
     description: Compute stats and create boxplots
     variables:
-      box_hist_CMIP5: &box_preproc
-        <<: *var_hist
-        additional_datasets: *CMIP5
+      box_test_fut: &box_test  
+        <<: *var_rcp85
+        additional_datasets: *CORDEX-CPM
         preprocessor: season_area_mean_proc
-      box_rcp85_CMIP5:
-        <<: *box_preproc
-        <<: *var_rcp85
-      box_hist_CORDEX-EUR11:
-        <<: *box_preproc
+      box_test_hist:
+        <<: *box_test
         <<: *var_hist
-        additional_datasets: *CORDEX-EUR11
-      box_rcp85_CORDEX-EUR11:
-        <<: *box_preproc
-        <<: *var_rcp85
-        additional_datasets: *CORDEX-EUR11
-      box_hist_cordex_cpm:
-        <<: *box_preproc
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM
-      box_rcp85_cordex_cpm:
-        <<: *box_preproc
-        <<: *var_rcp85
-        additional_datasets: *CORDEX-CPM
-      box_hist_cordex_cpm2:
-        <<: *box_preproc
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM2
-      box_rcp85_cordex_cpm2:
-        <<: *box_preproc
+      box_test_fut2:
+        <<: *box_test
         <<: *var_rcp85_2
         additional_datasets: *CORDEX-CPM2
-      box_hist_cordex_cpm3:
-        <<: *box_preproc
+      box_test_hist2:
+        <<: *box_test
         <<: *var_hist
-        ensemble: r14i1p1
-        additional_datasets: *CORDEX-CPM3
-      box_rcp85_cordex_cpm3:
-        <<: *box_preproc
-        <<: *var_rcp85
-        ensemble: r13i1p1
-        additional_datasets: *CORDEX-CPM3
-      box_hist_UKCP-GCM:
-        <<: *box_preproc
-        <<: *var_hist
-        additional_datasets: *UKCP-GCM
-      box_rcp85_UKCP-GCM:
-        <<: *box_preproc
-        <<: *var_rcp85
-        additional_datasets: *UKCP-GCM
-      box_hist_UKCP-RCM:
-        <<: *box_preproc
-        <<: *var_hist
-        additional_datasets: *UKCP-RCM
-      box_rcp85_UKCP-RCM:
-        <<: *box_preproc
-        <<: *var_rcp85
-        additional_datasets: *UKCP-RCM
-      box_hist_CMIP6:
-        <<: *box_preproc
-        <<: *var_hist_CMIP6
-        additional_datasets: *CMIP6
-      box_SSP585_CMIP6:
-        <<: *box_preproc
-        <<: *var_SSP585
-        additional_datasets: *CMIP6
+        additional_datasets: *CORDEX-CPM2
+  # #     box_hist_CMIP5: &box_preproc
+  # #       <<: *var_hist
+  # #       additional_datasets: *CMIP5
+  # #       preprocessor: season_area_mean_proc
+  # #     box_rcp85_CMIP5:
+  # #       <<: *box_preproc
+  # #       <<: *var_rcp85
+      # box_hist_CORDEX-EUR11: &box_preproc
+      #   # <<: *box_preproc
+      #   <<: *var_hist
+      #   preprocessor: season_area_mean_proc
+      #   additional_datasets: *CORDEX-EUR11
+      # box_rcp85_CORDEX-EUR11:
+      #   <<: *box_preproc
+      #   <<: *var_rcp85
+      #   additional_datasets: *CORDEX-EUR11
+      # box_hist_cordex_cpm: &box_preproc
+      #   <<: *box_preproc
+      #   <<: *var_hist
+      #   preprocessor: season_area_mean_proc
+      #   additional_datasets: *CORDEX-CPM
+      # box_rcp85_cordex_cpm:
+      #   <<: *box_preproc
+      #   <<: *var_rcp85
+      #   additional_datasets: *CORDEX-CPM
+      # box_hist_UKCP-GCM: &box_preproc
+      #   preprocessor: season_area_mean_proc
+      #   # <<: *box_preproc
+      #   <<: *var_hist
+      #   additional_datasets: *UKCP-GCM
+      # box_rcp85_UKCP-GCM:
+      #   <<: *box_preproc
+      #   <<: *var_rcp85
+      #   additional_datasets: *UKCP-GCM
+  #     # box_hist_UKCP-RCM:
+  #     #   <<: *box_preproc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *UKCP-RCM
+  #     # box_rcp85_UKCP-RCM:
+  #     #   <<: *box_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *UKCP-RCM
+  #     # box_hist_CMIP6:
+  #     #   <<: *box_preproc
+  #     #   <<: *var_hist_CMIP6
+  #     #   additional_datasets: *CMIP6
+  #     # box_SSP585_CMIP6:
+  #     #   <<: *box_preproc
+  #     #   <<: *var_SSP585
+  #     #   additional_datasets: *CMIP6
     scripts:
       main:
         script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/delta_boxplot.py
@@ -510,79 +464,115 @@ diagnostics:
           - CCLM4-8-17 MPI-M-MPI-ESM-LR
           - ALADIN63 CNRM-CERFACS-CNRM-CM5
           - REMO2015 MPI-M-MPI-ESM-LR
-          - RegCM4-7-0 MOHC-HadGEM2-ES
         # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
-  maps:
-    description: Compute stats and create maps
-    variables:
-      map_hist_CMIP5:
-        <<: *var_hist
-        additional_datasets: *CMIP5
-        preprocessor: season_spatial_proc_GCM
-      map_rcp85_CMIP5:
-        <<: *var_rcp85
-        additional_datasets: *CMIP5
-        preprocessor: season_spatial_proc_GCM
-      map_hist_CORDEX-EUR11:
-        <<: *var_hist
-        additional_datasets: *CORDEX-EUR11
-        preprocessor: season_spatial_proc_RCM
-      map_rcp85_CORDEX-EUR11:
-        <<: *var_rcp85
-        additional_datasets: *CORDEX-EUR11
-        preprocessor: season_spatial_proc_RCM
-      map_hist_cordex_cpm:
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM
-        preprocessor: season_spatial_proc_CPM
-      map_rcp85_cordex_cpm:
-        <<: *var_rcp85
-        additional_datasets: *CORDEX-CPM
-        preprocessor: season_spatial_proc_CPM
-      map_hist_cordex_cpm2:
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM2
-        preprocessor: season_spatial_proc_CPM
-      map_rcp85_cordex_cpm2:
-        <<: *var_rcp85_2
-        additional_datasets: *CORDEX-CPM2
-        preprocessor: season_spatial_proc_CPM
-      map_hist_cordex_cpm3:
-        <<: *var_hist
-        ensemble: r14i1p1
-        additional_datasets: *CORDEX-CPM3
-        preprocessor: season_spatial_proc_CPM
-      map_rcp85_cordex_cpm3:
-        <<: *var_rcp85
-        ensemble: r13i1p1
-        additional_datasets: *CORDEX-CPM3
-        preprocessor: season_spatial_proc_CPM
-      map_hist_UKCP-GCM:
-        <<: *var_hist
-        additional_datasets: *UKCP-GCM
-        preprocessor: season_spatial_proc_GCM
-      map_rcp85_UKCP-GCM:
-        <<: *var_rcp85
-        additional_datasets: *UKCP-GCM
-        preprocessor: season_spatial_proc_GCM
-      map_hist_UKCP-RCM:
-        <<: *var_hist
-        additional_datasets: *UKCP-RCM
-        preprocessor: season_spatial_proc_RCM
-      map_rcp85_UKCP-RCM:
-        <<: *var_rcp85
-        additional_datasets: *UKCP-RCM
-        preprocessor: season_spatial_proc_RCM
-      map_hist_CMIP6:
-        <<: *var_hist_CMIP6
-        additional_datasets: *CMIP6
-        preprocessor: season_spatial_proc_GCM
-      map_SSP585_CMIP6:
-        <<: *var_SSP585
-        additional_datasets: *CMIP6
-        preprocessor: season_spatial_proc_GCM
-    scripts:
-      main:
-        script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
-        domain: *region
-        # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
+  # maps:
+  #   description: Compute stats and create maps
+  #   variables:
+  #     map_hist_CMIP5: &map_preproc
+  #       <<: *var_hist
+  #       additional_datasets: *CMIP5
+  #       preprocessor: season_proc
+  #     map_rcp85_CMIP5:
+  #       <<: *map_preproc
+  #       <<: *var_rcp85
+  #     # map_hist_CORDEX-EUR11: &map_preproc
+  #     #   preprocessor: season_proc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *CORDEX-EUR11
+  #     # map_rcp85_CORDEX-EUR11:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *CORDEX-EUR11
+  #     # map_hist_CORDEX-CPM: &map_preproc
+  #     #   preprocessor: season_proc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *CORDEX-CPM
+  #     # map_rcp85_CORDEX-CPM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *CORDEX-CPM
+  #     # map_hist_UKCP-GCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *UKCP-GCM
+  #     # map_rcp85_UKCP-GCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *UKCP-GCM
+  #     # map_hist_UKCP-RCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *UKCP-RCM
+  #     # map_rcp85_UKCP-RCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *UKCP-RCM
+  #     # map_hist_CMIP6:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist_CMIP6
+  #     #   additional_datasets: *CMIP6
+  #     # map_SSP585_CMIP6:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_SSP585
+  #     #   additional_datasets: *CMIP6
+  #   scripts:
+  #     main:
+  #       script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
+  #       domain: *region
+  #       # script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py
+  # stats_maps:
+  #   description: Multi model mean stats
+  #   variables:
+  # #     map_hist_CMIP5: &mm_map_preproc
+  # #       <<: *var_hist
+  # #       additional_datasets: *CMIP5
+  # #       preprocessor: season_mm_stats_proc
+  # #     map_rcp85_CMIP5:
+  # #       <<: *mm_map_preproc
+  # #       <<: *var_rcp85
+  #     # map_hist_CORDEX-EUR11: &mm_map_preproc
+  #     #   preprocessor: season_mm_stats_proc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *CORDEX-EUR11
+  #     # map_rcp85_CORDEX-EUR11:
+  #     #   <<: *mm_map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *CORDEX-EUR11
+  #     map_hist_CORDEX-CPM: &mm_map_preproc
+  #       preprocessor: season_mm_stats_proc
+  #       <<: *var_hist
+  #       additional_datasets: *CORDEX-CPM
+  #     map_rcp85_CORDEX-CPM:
+  #       <<: *mm_map_preproc
+  #       <<: *var_rcp85
+  #       additional_datasets: *CORDEX-CPM
+  #     # map_hist_UKCP-GCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *UKCP-GCM
+  #     # map_rcp85_UKCP-GCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *UKCP-GCM
+  #     # map_hist_UKCP-RCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist
+  #     #   additional_datasets: *UKCP-RCM
+  #     # map_rcp85_UKCP-RCM:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_rcp85
+  #     #   additional_datasets: *UKCP-RCM
+  #     # map_hist_CMIP6:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_hist_CMIP6
+  #     #   additional_datasets: *CMIP6
+  #     # map_SSP585_CMIP6:
+  #     #   <<: *map_preproc
+  #     #   <<: *var_SSP585
+  #     #   additional_datasets: *CMIP6
+  #   scripts:
+  #     main:
+  #       script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
+  #       domain: *region
+  #       plot_type: multimodel
+  #   #     script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/print_diag.py

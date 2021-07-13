@@ -35,7 +35,9 @@ CPM_DRIVERS = {
     'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
     'HCLIMcom-HCLIM38-AROME': 'RACMO22E ICHEC-EC-EARTH',
     'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
-    'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR'
+    'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
+    'ICTP-RegCM4-7-0': 'RegCM4-6 MOHC-HadGEM2-ES',
+    'KNMI-HCLIM38h1-AROME': 'RACMO22E ICHEC-EC-EARTH',
 }
 
 
@@ -58,22 +60,19 @@ def process_projections_dict(proj_dict, season):
     return out_data
 
 
-def get_anomalies(ds_list, base_clim_start, fut_clim_start, relative=False):
+def get_anomalies(ds_list, relative=False):
+    # determine historic and future periods
+    start_years = list(group_metadata(ds_list, "start_year"))
+    base_clim_start = min(start_years)
+    fut_clim_start = max(start_years)
+
     # construct baseline
     base_metadata = select_metadata(ds_list, start_year=base_clim_start)
-    if base_metadata == []:
-        logging.warning(
-            f"Base climatology (start {base_clim_start}) not found")
-        return None
     base_file = base_metadata[0]["filename"]
     base_cube = iris.load_cube(base_file)
 
     # get future
     fut_metadata = select_metadata(ds_list, start_year=fut_clim_start)
-    if fut_metadata == []:
-        logging.warning(
-            f"Future climatology (start {fut_clim_start}) not found")
-        return None
     fut_file = fut_metadata[0]["filename"]
     fut_cube = iris.load_cube(fut_file)
 
@@ -274,7 +273,7 @@ def simple_dots_plot(projections, cordex_drivers, fname_suffix=''):
         plt.close()
 
 
-def prepare_scatter_data(x_data, y_data, project):
+def prepare_scatter_data(x_data, y_data, project, full_y=None):
     # need to establish matching cmip value for each cordex value
     # cordex data keyed by RCM, then GCM
     x_vals = []
@@ -292,12 +291,16 @@ def prepare_scatter_data(x_data, y_data, project):
 
                 # construct label
                 labels.append(f"{actual_driver} {rcm}")
+        if full_y:
+            full_y_vals = full_y.values()
     elif project == "UKCP18":
         for ensemble in x_data:
             x_vals.append(x_data[ensemble])
             y_vals.append(y_data[ensemble])
 
             labels.append(ensemble)
+        if full_y:
+            full_y_vals = full_y.values()
     elif project == "CPM":
         for cpm in x_data:
             for driver in x_data[cpm]:
@@ -306,70 +309,124 @@ def prepare_scatter_data(x_data, y_data, project):
                 actual_driver = CPM_DRIVERS[cpm]
                 rcm, sep, gcm = actual_driver.partition(' ')
                 y_vals.append(y_data[rcm][gcm])
-                
+
                 # construct label
                 labels.append(f"{actual_driver} {cpm}")
+        if full_y:
+            full_y_vals = []
+            for rcm in full_y:
+                for gcm in full_y[rcm]:
+                    full_y_vals.append(full_y[rcm][gcm])
     else:
         raise ValueError(f"Unrecognised project {project}")
 
-    return x_vals, y_vals, labels
+    if full_y:
+        return x_vals, y_vals, labels, full_y_vals
+    else:
+        return x_vals, y_vals, labels
 
 
-def scatter_response(x_data, y_data, labels, suffix='', full_y=None):
+def scatter_response(x_data, y_data, labels, suffix='', full_x=None):
     seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
     for s in seasons.keys():
         # construct iris constraint
         season_con = iris.Constraint(season_number=s)
         plt.figure(figsize=(12.8, 9.6))
-        legends = []
         max_val = 0
         min_val = 0
 
-        if full_y:
-            y_data = full_y.extract(season_con).data
-            x_data = []
+        if full_x:
+            x_cubes = iris.cube.CubeList(full_x).extract(season_con)
+            full_x_data = [y.data.item() for y in x_cubes]
+            y_array = []
 
         # construct axes
-        if full_y:
-            ax_scatter = plt.subplot(222)
-            ax_y = plt.subplot(221, sharey=ax_scatter)
-            ax_x = plt.subplot(224, sharex=ax_scatter)
+        if full_x:
+            ax_scatter = plt.subplot(232)
+            ax_x = plt.subplot(231, sharey=ax_scatter)
+            ax_y = plt.subplot(233, sharey=ax_scatter)
         else:
             ax_scatter = plt.axes()
+
+        last_label = None
+        if "cordex" in suffix:
+            marker_props = enumerate((cycler(marker=['o', 'P']) * cycler(color=list('rgbmy'))))
 
         for i in range(len(x_data)):
             x_val = x_data[i].extract(season_con).data
             y_val = y_data[i].extract(season_con).data
 
-            if full_y:
-                x_data.append(x_val)
-            
+            if full_x:
+                y_array.append(y_val.item())
+
             # update max and min value encountered
             max_val = max(x_val, y_val, max_val)
             min_val = min(x_val, y_val, min_val)
 
-            ax_scatter.scatter(x_val, y_val)
+            if "cordex" in suffix:
+                if labels[i].split()[-1] != last_label:
+                    props = next(marker_props)
+                    last_label = labels[i].split()[-1]
+                ax_scatter.scatter(
+                    x_val, y_val, label=f"{i} - {labels[i]}",
+                    color=props[1]['color'], marker=props[1]['marker']
+                    )
+            else:
+                ax_scatter.scatter(x_val, y_val, label=f"{i} - {labels[i]}")
 
             if labels[i].isdigit():
                 ax_scatter.text(x_val, y_val, labels[i])
             else:
                 ax_scatter.text(x_val, y_val, i)
-                legends.append(f"{i} - {labels[i]}")
-                ax_scatter.legend(legends)
 
-        ax_scatter.xlabel("RCM response")
-        ax_scatter.ylabel("Driver response")
-        ax_scatter.title(f"{get_var(cfg)} response")
+        if not labels[i].isdigit():
+            h, ls = ax_scatter.get_legend_handles_labels()
+            ax_legend = plt.subplot(236)
+            ax_legend.axis('off')
+            ax_legend.legend(h, ls, ncol=2)
+
+        if suffix == "_cpm":
+            ax_scatter.set_ylabel("CPM response")
+            ax_scatter.set_xlabel("RCM response")
+        else:
+            ax_scatter.set_ylabel("RCM response")
+            ax_scatter.set_xlabel("GCM response")
+        ax_scatter.set_title(f"{get_var(cfg)} response")
 
         # plot a diagonal equivalence line
         ax_scatter.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
 
-        if full_y:
-            # boxplots
-            ax_y.boxplot(y_data)
-            ax_y.axis('off')
-            ax_x.boxplot(x_data, vert=False)
+        if full_x:
+            # violinplots
+            ax_x.violinplot(full_x_data)
+            for i in range(len(full_x_data)):
+                ax_x.plot(
+                        1,
+                        full_x_data[i],
+                        marker="o",
+                        fillstyle="none",
+                        color="k",
+                    )
             ax_x.axis('off')
+            if suffix == "_cpm":
+                ax_x.set_title('Full RCM ensemble')
+            else:
+                ax_x.set_title('Full GCM ensemble')
+
+            ax_y.violinplot(y_array)
+            for i in range(len(y_array)):
+                ax_y.plot(
+                        1,
+                        y_array[i],
+                        marker="o",
+                        fillstyle="none",
+                        color="k",
+                    )
+            ax_y.axis('off')
+            if suffix == "_cpm":
+                ax_y.set_title('CPM ensemble')
+            else:
+                ax_y.set_title('RCM ensemble')
 
         # save
         plt.savefig(f"{cfg['plot_dir']}/scatter_{seasons[s]}{suffix}.png")
@@ -420,12 +477,6 @@ def main(cfg):
     else:
         rel_change = False
 
-    # establish the time periods of our datasets
-    start_years = list(group_metadata(cfg["input_data"].values(),
-                                      "start_year"))
-    base_start = min(start_years)
-    fut_start = max(start_years)
-
     # first group datasets by project..
     # this creates a dict of datasets keyed by project (CMIP5, CMIP6 etc.)
     projects = group_metadata(cfg["input_data"].values(), "project")
@@ -463,8 +514,7 @@ def main(cfg):
                 projections[proj][m] = dict.fromkeys(drivers.keys())
                 for d in drivers:
                     logging.info(f"Calculating anomalies for {proj} {m} {d}")
-                    anoms = get_anomalies(drivers[d], base_start, fut_start,
-                                          rel_change)
+                    anoms = get_anomalies(drivers[d], rel_change)
                     if anoms is None:
                         continue
                     projections[proj][m][d] = anoms
@@ -481,8 +531,7 @@ def main(cfg):
                 projections[proj_key] = dict.fromkeys(ensembles.keys())
                 for ens in ensembles:
                     logging.info(f"Calculating anomalies for {proj_key} {ens}")
-                    anoms = get_anomalies(ensembles[ens], base_start,
-                                          fut_start, rel_change)
+                    anoms = get_anomalies(ensembles[ens], rel_change)
                     if anoms is None:
                         continue
                     projections[proj_key][ens] = anoms
@@ -491,8 +540,7 @@ def main(cfg):
                     model_lists[proj_key].append(f"{proj_key} {ens}")
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
-                anoms = get_anomalies(models[m], base_start, fut_start,
-                                      rel_change)
+                anoms = get_anomalies(models[m], rel_change)
                 if anoms is None:
                     continue
                 projections[proj][m] = anoms
@@ -522,30 +570,34 @@ def main(cfg):
     simple_dots_plot(projections, list(cordex_drivers) + rcm_drivers)
 
     # scatter plots - regular cordex
-    rcm_points, gcm_points, labels = prepare_scatter_data(
-        projections["CORDEX"], projections["CMIP5"], "CORDEX"
-        )
-    scatter_response(rcm_points, gcm_points, labels, "_cordex_simple_aerosol")
+    if all([p in projections for p in ["CORDEX", "CMIP5"]]):
+        rcm_points, gcm_points, labels, cmip5 = prepare_scatter_data(
+            projections["CORDEX"], projections["CMIP5"], "CORDEX", projections["CMIP5"]
+            )
+        scatter_response(gcm_points, rcm_points, labels, "_cordex_simple_aerosol", cmip5)
 
     # cordex with clever aerosol
-    rcm_points, gcm_points, labels = prepare_scatter_data(
-        projections["CORDEX_aerosol"], projections["CMIP5"], "CORDEX"
-        )
-    scatter_response(rcm_points, gcm_points, labels, "_cordex_dynamic_aerosol")
+    if all([p in projections for p in ["CORDEX_aerosol", "CMIP5"]]):
+        rcm_points, gcm_points, labels, cmip5 = prepare_scatter_data(
+            projections["CORDEX_aerosol"], projections["CMIP5"], "CORDEX", projections["CMIP5"]
+            )
+        scatter_response(gcm_points, rcm_points, labels, "_cordex_dynamic_aerosol", cmip5)
 
     # UKCP
-    rcm_points, gcm_points, labels = prepare_scatter_data(
-        projections["UKCP18 land-rcm"], projections["UKCP18 land-gcm"], "UKCP18"
-        )
-    scatter_response(rcm_points, gcm_points, labels, "_UKCP")
+    if all([p in projections for p in ["UKCP18 land-rcm", "UKCP18 land-gcm"]]):
+        rcm_points, gcm_points, labels, ukcp_gcm = prepare_scatter_data(
+            projections["UKCP18 land-rcm"], projections["UKCP18 land-gcm"], "UKCP18", projections["UKCP18 land-gcm"]
+            )
+        scatter_response(gcm_points, rcm_points, labels, "_UKCP", ukcp_gcm)
 
     # CPMs
-    all_cordex = projections["CORDEX"].copy()
-    all_cordex.update(projections["CORDEX_aerosol"])
-    rcm_points, gcm_points, labels = prepare_scatter_data(
-        projections["cordex-cpm"], all_cordex, "CPM"
-        )
-    scatter_response(rcm_points, gcm_points, labels, "_cpm")
+    if all([p in projections for p in ["CORDEX", "CORDEX_aerosol", "cordex-cpm"]]):
+        all_cordex = projections["CORDEX"].copy()
+        all_cordex.update(projections["CORDEX_aerosol"])
+        rcm_points, gcm_points, labels, all_gcm = prepare_scatter_data(
+            projections["cordex-cpm"], all_cordex, "CPM", all_cordex
+            )
+        scatter_response(gcm_points, rcm_points, labels, "_cpm", all_gcm)
 
     # print all datasets used
     print("Input models for plots:")
