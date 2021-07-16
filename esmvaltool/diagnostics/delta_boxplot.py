@@ -12,6 +12,7 @@ import iris
 import os
 import logging
 import re
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -218,7 +219,7 @@ def plot_boxplots(projections, legend_models, season, fname_suffix=None):
     plt.gca().set_xticklabels(p_keys)
     plt.title(f"{season} {var} change")
     plt.tight_layout()
-    plt.savefig(f"{cfg['plot_dir']}/boxplot_{season}{fname_suffix}.png")
+    plt.savefig(f"{cfg['plot_dir']}/boxplot_{season}{fname_suffix}.png", bbox_inches='tight')
     plt.close()
 
 
@@ -269,7 +270,7 @@ def simple_dots_plot(projections, cordex_drivers, season, fname_suffix=''):
     plt.gca().set_xticklabels(p_keys)
     plt.title(f"{season} {var} change")
     plt.tight_layout()
-    plt.savefig(f"{cfg['plot_dir']}/violin_{season}{fname_suffix}.png")
+    plt.savefig(f"{cfg['plot_dir']}/violin_{season}{fname_suffix}.png", bbox_inches='tight')
     plt.close()
 
 
@@ -285,12 +286,13 @@ def prepare_scatter_data(x_data, y_data, project):
             y_vals.append(y_data[rcm])
 
             # find corresponding cmip data
-            driver = rcm.split(' ')[1]
+            actual_rcm, driver = rcm.split(' ')
             actual_driver = remove_institute_from_driver(driver)
+
             x_vals.append(x_data[actual_driver])
 
             # construct label
-            labels.append(f"{actual_driver} {rcm}")
+            labels.append(f"{actual_driver} {actual_rcm}")
     elif project == "UKCP18":
         for ensemble in x_data:
             x_vals.append(x_data[ensemble])
@@ -303,6 +305,7 @@ def prepare_scatter_data(x_data, y_data, project):
             y_vals.append(y_data[cpm])
 
             driver = CPM_DRIVERS[cpm.split(' ')[0]]
+            cpm = cpm.split(' ')[0]
             x_vals.append(x_data[driver])
 
             # construct label
@@ -330,12 +333,12 @@ def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
         min_val = min(x_val, y_val, min_val)
 
         if RCM_markers:
-            gcm = labels[i].split()[-1]
-            if gcm in label_props:
-                props = label_props[gcm]
+            rcm = labels[i].split()[-1]
+            if rcm in label_props:
+                props = label_props[rcm]
             else:
                 props = next(marker_props)
-                label_props[gcm] = props
+                label_props[rcm] = props
 
             ax.scatter(
                 x_val, y_val, label=f"{i} - {labels[i]}",
@@ -447,7 +450,7 @@ def scatter_response(x_data, y_data, labels, season, suffix='', full_x=None):
             ax_y.set_title('RCM ensemble')
 
     # save
-    plt.savefig(f"{cfg['plot_dir']}/scatter_{seasons[s]}{suffix}.png")
+    plt.savefig(f"{cfg['plot_dir']}/scatter_{seasons[s]}{suffix}.png", bbox_inches='tight')
     plt.close()
 
 
@@ -463,35 +466,68 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     labels2: Legend labels for scatter2
     suffix: suffix to end to filename
     '''
-    plt.figure(figsize=(12.8, 9.6))
+    plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
     ax_violins = plt.subplot(211)
-    ax_scatter1 = plt.subplot(234)
-    ax_scatter2 = plt.subplot(235)
-    ax_legend = plt.subplot(236)
+    ax_scatter1 = plt.subplot(223)
+    ax_scatter2 = plt.subplot(224)
 
     # Create GCM / RCM scatter
     labelled_scatter(GCM_sc, RCM_sc1, labels1, ax_scatter1, RCM_markers=True)
+    ax_scatter1.set_xlabel('GCM')
+    ax_scatter1.set_ylabel('RCM')
 
     # create RCM / CPM scatter
     labelled_scatter(RCM_sc2, CPM, labels2, ax_scatter2)
+    ax_scatter2.set_xlabel('RCM')
+    ax_scatter2.set_ylabel('CPM')
 
     # legend information
     h1, l1 = ax_scatter1.get_legend_handles_labels()
     h2, l2 = ax_scatter2.get_legend_handles_labels()
-    ax_legend.axis('off')
-    ax_legend.legend(h1 + h2, l1 + l2)
+    ax_violins.legend(h1 + h2, l1 + l2, bbox_to_anchor=(1.05, 1.0), loc='upper left')
 
     # create GCM / RCM / CPM violins / dots
     # GCMs go in position 1, RCMs position 2, CPMs position 3
-    ax_violins.violinplot(all_GCM, [1])
-    ax_violins.violinplot(all_RCM, [2])
-    ax_violins.violinplot(CPM, [3])
+    coloured_violin(all_GCM, 1, ax_violins, 'lightgrey')
+    coloured_violin(all_RCM, 2, ax_violins,'lightgrey')
+    coloured_violin(CPM, 3, ax_violins,'lightgrey')
+
+    # set x labels
+    ax_violins.set_xticks(range(1, 4))
+    ax_violins.set_xticklabels(['CMIP5', 'CORDEX', 'CPM'])
+
+    # also plot individual dots for each model..
+    plot_points(all_GCM, 0.8, ax_violins)
+    plot_points(GCM_sc, 1.3, ax_violins, color='r')
+    plot_points(RCM_sc1, 1.8, ax_violins, color='r')
+    plot_points(RCM_sc2, 2.3, ax_violins, color='b')
+    plot_points(CPM, 3, ax_violins, color='b')
+
+    var = get_var(cfg)
+    plt.suptitle(f"{suffix} {var} change")
 
     # save plot
-    plt.savefig(f"{cfg['plot_dir']}/mega_scatter_{suffix}.png")
+    plt.savefig(f"{cfg['plot_dir']}/mega_scatter_{suffix}.png", bbox_inches='tight')
     plt.close()
+
+
+def plot_points(points, x, ax, color='k'):
+    for p in points:
+         ax.plot(x, p, marker="o", fillstyle="none", color=color)
+
+
+def coloured_violin(data, pos, ax, color=None):
+    vparts = ax.violinplot(data, [pos])
+
+    if color:
+        for part in ['bodies', 'cbars', 'cmins', 'cmaxes']:
+            if part == 'bodies':
+                for c in vparts[part]:
+                    c.set_color(color)
+            else:
+                vparts[part].set_color(color)
 
 
 def remove_institute_from_driver(driver_str):
@@ -675,8 +711,28 @@ def main(cfg):
         mega_scatter(
             gcm_sc, rcm_sc1, rcm_sc2, cpm_sc,
             list(plotting_dict[season]['CMIP5'].values()), list(all_CORDEX.values()),
-            labels1, labels2, f'_{season}'
+            labels1, labels2, f'{season}'
         )
+
+        # save some plotting data for notebook experiments
+        # create dictionary of all the required data for one particular season
+        if season == 'JJA':
+            pickle_dict = {}
+            pickle_dict['CMIP5_sc'] = gcm_sc
+            pickle_dict['RCM_sc1'] = rcm_sc1
+            pickle_dict['RCM_sc2'] = rcm_sc2
+            pickle_dict['labels1'] = labels1
+            pickle_dict['labels2'] = labels2
+            pickle_dict['cpm'] = cpm_sc
+            pickle_dict['CMIP6'] = list(plotting_dict[season]['CMIP6'].values())
+            pickle_dict['CMIP5'] = list(plotting_dict[season]['CMIP5'].values())
+            pickle_dict['CORDEX'] = list(all_CORDEX.values())
+            pickle_dict['UKCP18 land-gcm'] = plotting_dict[season]['UKCP18 land-gcm']
+            pickle_dict['UKCP18 land-rcm'] = plotting_dict[season]['UKCP18 land-rcm']
+
+            pickle.dump(pickle_dict, open(f'{cfg["work_dir"]}/sample_plotting_data.pkl', 'wb'))
+
+
 
     # print all datasets used
     print("Input models for plots:")
