@@ -477,11 +477,15 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     labelled_scatter(GCM_sc, RCM_sc1, labels1, ax_scatter1, RCM_markers=True)
     ax_scatter1.set_xlabel('GCM')
     ax_scatter1.set_ylabel('RCM')
+    if min(RCM_sc1) < 0 < max(RCM_sc1):
+        ax_scatter1.axhline(ls=':', color='k', alpha=0.75)
 
     # create RCM / CPM scatter
     labelled_scatter(RCM_sc2, CPM, labels2, ax_scatter2)
     ax_scatter2.set_xlabel('RCM')
     ax_scatter2.set_ylabel('CPM')
+    if min(CPM) < 0 < max(CPM):
+        ax_scatter2.axhline(ls=':', color='k', alpha=0.75)
 
     # legend information
     h1, l1 = ax_scatter1.get_legend_handles_labels()
@@ -493,7 +497,7 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     coloured_violin(all_GCM, 1, ax_violins, 'lightgrey')
     coloured_violin(all_RCM, 2, ax_violins,'lightgrey')
     coloured_violin(CPM, 3, ax_violins,'lightgrey')
-
+    
     # set x labels
     ax_violins.set_xticks(range(1, 4))
     ax_violins.set_xticklabels(['CMIP5', 'CORDEX', 'CPM'])
@@ -504,6 +508,11 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     plot_points(RCM_sc1, 1.8, ax_violins, color='r')
     plot_points(RCM_sc2, 2.3, ax_violins, color='b')
     plot_points(CPM, 3, ax_violins, color='b')
+
+    max_violin = max(max(all_GCM), max(RCM_sc1), max(CPM))
+    min_violin = min(min(all_GCM), min(RCM_sc1), min(CPM))
+    if min_violin < 0 < max_violin:
+        ax_violins.axhline(ls=':', color='k', alpha=0.75)
 
     var = get_var(cfg)
     plt.suptitle(f"{suffix} {var} change")
