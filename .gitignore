@@ -7,3 +7,6 @@ output_runs_of_interest
 
 # ignore slurm output
 *.out
+
+# tars
+*.tar.gz
