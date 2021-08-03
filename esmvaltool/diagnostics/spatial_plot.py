@@ -6,9 +6,11 @@ from esmvaltool.diag_scripts.shared import (
     select_metadata,
     extract_variables,
 )
+from esmvalcore.preprocessor import regrid
 
 import iris
 import iris.quickplot as qplt
+import iris.plot as iplt
 import cartopy
 import cartopy.crs as ccrs
 
@@ -142,6 +144,37 @@ def compute_multi_model_stats(cl, agg):
     return stats
 
 
+def plot_map(pdata, extent, var, ax, legend=False):
+    ax.set_extent(extent)
+    # set scales
+    if var == "pr":
+        vmn = -30
+        vmx = 30
+        # cmap = "brewer_RdYlBu_11"
+        cmap = "RdBu"
+    else:
+        vmn = 0.5
+        vmx = 5
+        #cmap = "brewer_YlOrRd_09"
+        cmap = "magma_r"
+    # ensure longitude coordinates straddle the meridian for GCM origin data
+    if pdata.coord("longitude").ndim == 1:
+        # TODO This will probably cause issues if it's ever run with data
+        # that straddles the dateline, so a check should be added.
+        plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+        plot_cube.coord("longitude").circular = False
+    else:
+        plot_cube = pdata
+    if legend:
+        qplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
+    else:
+        iplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
+    ax.coastlines()
+    ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
+
+    return ax
+
+
 def main(cfg):
     # The config object is a dict of all the metadata from the pre-processor
 
@@ -251,9 +284,34 @@ def main(cfg):
 
     # compute multi model means
     for p in projections:
-        projections[p]['mean'] = compute_multi_model_stats(
+        mm_mean = compute_multi_model_stats(
             list(NestedDictValues(projections[p])), iris.analysis.MEAN
         )
+        projections[p]['mean'] = mm_mean
+
+    # compute regridded versions for CORDEX and CPMs
+    for p in projections:
+        grid = None
+        if p == 'CORDEX':
+            grid = projections['CORDEX_drivers']['mean']
+            scheme = 'area_weighted'
+        elif p == 'cordex-cpm':
+            grid = projections['CPM_drivers']['mean']
+            scheme = 'area_weighted'
+        
+        if grid:
+            regrid_mean = regrid(projections[p]['mean'], grid, scheme)
+            projections[p]['mean_rg'] = regrid_mean
+
+    # compute regrid diffs
+    for p in projections:
+        if p == 'CORDEX':
+            diff = projections[p]['mean_rg'] - projections['CORDEX_drivers']['mean']
+            projections[p]['diff_rg'] = diff
+        elif p == 'cordex-cpm':
+            diff = projections[p]['mean_rg'] - projections['CPM_drivers']['mean']
+            projections[p]['diff_rg'] = diff
+
 
     # this section of the code does the plotting..
     # we now have all the projections in the projections dictionary
@@ -287,35 +345,56 @@ def main(cfg):
                 title = f"{p} {m} {seasons[s]} {var} change"
                 plt.figure(figsize=(12.8, 9.6))
                 ax = plt.axes(projection=ccrs.PlateCarree())
-                ax.set_extent(extent)
-                # set scales
-                if var == "pr":
-                    vmn = -30
-                    vmx = 30
-                    # cmap = "brewer_RdYlBu_11"
-                    cmap = "RdBu"
-                else:
-                    vmn = 0.5
-                    vmx = 5
-                    #cmap = "brewer_YlOrRd_09"
-                    cmap = "magma_r"
-                # ensure longitude coordinates straddle the meridian for GCM origin data
-                if pdata[m].coord("longitude").ndim == 1:
-                    # TODO This will probably cause issues if it's ever run with data
-                    # that straddles the dateline, so a check should be added.
-                    plot_cube = pdata[m].intersection(longitude=(-180.0, 180.0))
-                    plot_cube.coord("longitude").circular = False
-                else:
-                    plot_cube = pdata[m]
-                qplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
+                plot_map(pdata[m], extent, var, ax, True)
                 plt.title(title)
-                ax.coastlines()
-                ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
                 logging.info(f'Saving plot for {p} {m} {s}')
                 plt.savefig(
                     f"{cfg['plot_dir']}/{seasons[s]}/{p}_{m}_map_{seasons[s]}.png"
                 )
                 plt.close()
+
+        # now make panel plots for the mean data
+        scon = iris.Constraint(season_number=s)
+        logging.info(f'Making {seasons[s]} panel plot')
+        plt.figure(figsize=(12.8, 9.6))
+        # plots should include. All CMIP5, CORDEX drivers, CORDEX, CPM drivers, CPM.
+        ax = plt.subplot(331, projection=ccrs.PlateCarree())
+        plot_map(projections['CMIP5']['mean'].extract(scon), extent, var, ax)
+        plt.title('CMIP5')
+
+        ax = plt.subplot(334, projection=ccrs.PlateCarree())
+        plot_map(projections['CORDEX_drivers']['mean'].extract(scon), extent, var, ax)
+        plt.title('CORDEX driving models')
+
+        ax = plt.subplot(335, projection=ccrs.PlateCarree())
+        plot_map(projections['CORDEX']['mean'].extract(scon), extent, var, ax)
+        plt.title('CORDEX')
+
+        # plot diff of CORDEX to CMIP
+        ax = plt.subplot(336, projection=ccrs.PlateCarree())
+        plot_map(projections['CORDEX']['diff_rg'].extract(scon), extent, var, ax)
+        plt.title('CORDEX - CMIP5 diff')
+
+        ax = plt.subplot(337, projection=ccrs.PlateCarree())
+        plot_map(projections['CPM_drivers']['mean'].extract(scon), extent, var, ax)
+        plt.title('CPM driving models')
+
+        ax = plt.subplot(338, projection=ccrs.PlateCarree())
+        plot_map(projections['cordex-cpm']['mean'].extract(scon), extent, var, ax)
+        plt.title('CPM')
+
+        # plot diff of CPM to CORDEX
+        ax = plt.subplot(339, projection=ccrs.PlateCarree())
+        plot_map(projections['cordex-cpm']['diff_rg'].extract(scon), extent, var, ax)
+        plt.title('CPM - CORDEX diff')
+
+        # plot diff of CPM to CORDEX
+
+        plt.suptitle(f'{seasons[s]} {var} change')
+        plt.savefig(
+            f"{cfg['plot_dir']}/{seasons[s]}/all_means_map_{seasons[s]}.png"
+        )
+
 
     # print all datasets used
     print("Input models for plots:")
