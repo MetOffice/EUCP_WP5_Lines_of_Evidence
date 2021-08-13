@@ -28,7 +28,7 @@ INSTITUTES = [
     'MPI-M',
     'CNRM-CERFACS',
     'ICHEC',
-    'MOHC'
+    'MOHC',
 ]
 
 CPM_DRIVERS = {
@@ -39,6 +39,8 @@ CPM_DRIVERS = {
     'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
     'ICTP-RegCM4-7-0': 'RegCM4-6 MOHC-HadGEM2-ES',
     'KNMI-HCLIM38h1-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
+    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES'
 }
 
 
@@ -528,7 +530,7 @@ def plot_points(points, x, ax, color='k'):
 
 
 def coloured_violin(data, pos, ax, color=None):
-    vparts = ax.violinplot(data, [pos])
+    vparts = ax.violinplot(data, [pos], showmedians=True)
 
     if color:
         for part in ['bodies', 'cbars', 'cmins', 'cmaxes']:
@@ -541,7 +543,6 @@ def coloured_violin(data, pos, ax, color=None):
 
 def remove_institute_from_driver(driver_str):
     # remove the institute bit from the "driver" string
-
     new_str = driver_str
     # loop through the institutes and remove them if found
     for i in INSTITUTES:
@@ -611,10 +612,15 @@ def main(cfg):
         models = group_metadata(projects[proj], "dataset")
 
         # empty dict for results
-        projections[proj] = {}
+        if proj == 'non-cordex-rcm':
+            proj = 'CORDEX'
+            
+        if proj not in projections.keys():
+            projections[proj] = {}
+
         # loop over the models
         for m in models:
-            if proj[:6].upper() == "CORDEX":
+            if "CORDEX" in proj.upper():
                 # then we need to go one deeper in the dictionary to deal with driving models
                 drivers = group_metadata(models[m], "driver")
                 projections[proj][m] = dict.fromkeys(drivers.keys())
@@ -655,7 +661,7 @@ def main(cfg):
                 model_lists[proj].append(f"{m}")
 
         # seperate CORDEX RCMs into special and normal if needed
-        if spec_rcms and proj[:6].upper() == "CORDEX":
+        if spec_rcms and "CORDEX" in proj.upper():
             # create new dictionary entry if needed
             if 'CORDEX_aerosol' not in projections:
                 projections['CORDEX_aerosol'] = {}
@@ -669,6 +675,7 @@ def main(cfg):
             del projections[proj]
     cordex_drivers = set(cordex_drivers)
     cordex_rcms = set(cordex_rcms)
+
 
     # reorganise and extract data for plotting
     plotting_dict = proj_dict_to_season_dict(projections)

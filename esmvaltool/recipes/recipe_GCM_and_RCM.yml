@@ -38,7 +38,7 @@ dataset_groups:
   - {dataset: CMCC-CESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CNRM-CM5, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: CSIRO-Mk3-6-0, project: CMIP5, ensemble: r1i1p1, mip: Amon}
-  - {dataset: EC-EARTH, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {dataset: EC-EARTH, project: CMIP5, ensemble: r12i1p1, mip: Amon}
   - {dataset: FGOALS-g2, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: FIO-ESM, project: CMIP5, ensemble: r1i1p1, mip: Amon}
   - {dataset: GFDL-CM3, project: CMIP5, ensemble: r1i1p1, mip: Amon}
@@ -126,82 +126,45 @@ dataset_groups:
   - {institute: MOHC, driver: ICHEC-EC-EARTH, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r12i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   - {institute: MOHC, driver: NCC-NorESM1-M, dataset: HadREM3-GA7-05, project: CORDEX, ensemble: r1i1p1, mip: mon, rcm_version: v1, domain: EUR-11}
   
+  # Special non CORDEX RCMs used to drive CPMs
+  - {project: non-cordex-rcm, ensemble: r12i1p1, dataset: SMHI-HCLIM38-ALADIN, driver: ICHEC-EC-EARTH, mip: mon, domain: CEE-12, rcm_version: v1}
+  # Model has slightly different future period.
+  CORDEX-EUR11_2: &CORDEX-EUR11_2
+  - {project: non-cordex-rcm, ensemble: r1i1p1, dataset: ICTP-RegCM4-7-0, driver: MOHC-HadGEM2-ES, mip: mon, domain: EUR-11, rcm_version: v0}
+
   # CPM models (also using CMIP5 conventions)
   # CORDEX-FPSC: &CORDEX-FPSC
   # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-fpsc, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
 
+  # CORDEX-cpm: &CORDEX-CPM
+  # # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
+  # ###########
+  # # ALP-3 models
+  # ###############
+  # - {project: cordex-cpm, ensemble: r12i1p1, dataset: CLMcom-CMCC-CCLM5-0-9, driver: ICHEC-EC-EARTH, mip: mon, domain: ALP-3, rcm_version: x2yn2v1} # Driving RCM: CCLM4 - EC-EARTH
+  # - {project: cordex-cpm, ensemble: r12i1p1, dataset: HCLIMcom-HCLIM38-AROME, driver: ICHEC-EC-EARTH, mip: mon, domain: ALP-3, rcm_version: fpsconv-x2yn2-v1} # Driving RCM: RACMO - EC-EARTH
+  # - {project: cordex-cpm, ensemble: r1i1p1, dataset: COSMO-pompa, driver: MPI, mip: mon, domain: ALP-3, rcm_version: 5.0_2019.1} # Driving RCM: CCLM4 - MPI
+  # - {project: cordex-cpm, ensemble: r1i1p1, dataset: CNRM-AROME41t1, driver: CNRM-CERFACS-CNRM-CM5, mip: mon, domain: ALP-3, rcm_version: fpsconv-x2yn2-v1} # Driving RCM: ALADIN63 - CNRM-CM5
+  # - {project: cordex-cpm, ensemble: r1i1p1, dataset: GERICS-REMO2015, driver: MPI-M-MPI-ESM-LR, mip: mon, domain: ALP-3, rcm_version: v1} # Driving RCM: REMO2015 - MPI-ESM-LR
+  # # future timeslice of 2040-2049 differs from others and needs special handling.
+  # CORDEX-cpm_2: &CORDEX-CPM2
+  # - {project: cordex-cpm, ensemble: r1i1p1, dataset: ICTP-RegCM4-7-0, driver: HadGEM, mip: mon, domain: ALP-3, rcm_version: v0} # Driver RegCM4-6 HadGEM2-ES (actually RegCM4-7-0)
+  # # differing ensemble numbers for past and future need special handling
+  # # (historical ensemble 14, future ensemble 13)
+  # CORDEX-cpm3: &CORDEX-CPM3
+  # - {project: cordex-cpm, dataset: KNMI-HCLIM38h1-AROME, driver: KNMI-EC-EARTH, mip: mon, domain: ALP-3, rcm_version: fpsconv-x2yn2-v1} # Driver RACMO22E - EC-EARTH (technically it's RACMO23E, not available on CEDA)
+  
+  # ####################
+  # CEE Models
+  # ####################
   CORDEX-cpm: &CORDEX-CPM
-  # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
-  - {
-      project: cordex-cpm,
-      ensemble: r12i1p1,
-      dataset: CLMcom-CMCC-CCLM5-0-9,
-      driver: ICHEC-EC-EARTH,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: x2yn2v1,
-    } # Driving RCM: CCLM4 - EC-EARTH
-  - {
-      project: cordex-cpm,
-      ensemble: r12i1p1,
-      dataset: HCLIMcom-HCLIM38-AROME,
-      driver: ICHEC-EC-EARTH,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: fpsconv-x2yn2-v1,
-    } # Driving RCM: RACMO - EC-EARTH
-  - {
-      project: cordex-cpm,
-      ensemble: r1i1p1,
-      dataset: COSMO-pompa,
-      driver: MPI,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: 5.0_2019.1,
-    } # Driving RCM: CCLM4 - MPI
-  - {
-      project: cordex-cpm,
-      ensemble: r1i1p1,
-      dataset: CNRM-AROME41t1,
-      driver: CNRM-CERFACS-CNRM-CM5,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: fpsconv-x2yn2-v1,
-    } # Driving RCM: ALADIN63 - CNRM-CM5
-  - {
-      project: cordex-cpm,
-      ensemble: r1i1p1,
-      dataset: GERICS-REMO2015,
-      driver: MPI-M-MPI-ESM-LR,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: v1,
-    } # Driving RCM: REMO2015 - MPI-ESM-LR
-
-  # future timeslice of 2040-2049 differs from others and needs special handling.
+  - {project: cordex-cpm, ensemble: r12i1p1, dataset: SMHI-HCLIM38-AROME, driver: ICHEC-EC-EARTH, mip: mon, domain: CEE-3, rcm_version: x2yn2v1}
   CORDEX-cpm_2: &CORDEX-CPM2
-  - {
-      project: cordex-cpm,
-      ensemble: r1i1p1,
-      dataset: ICTP-RegCM4-7-0,
-      driver: HadGEM,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: v0,
-    } # Driver RegCM4-6 HadGEM2-ES (actually RegCM4-7-0)
+  - {project: cordex-cpm, ensemble: r1i1p1, dataset: ICTP-RegCM4-7, driver: MOHC-HadGEM2-ES, mip: mon, domain: CEE-3, rcm_version: fpsconv-x2yn2-v1}
 
-  # differing ensemble numbers for past and future need special handling
-  # (historical ensemble 14, future ensemble 13)
-  CORDEX-cpm3: &CORDEX-CPM3
-  - {
-      project: cordex-cpm,
-      dataset: KNMI-HCLIM38h1-AROME,
-      driver: KNMI-EC-EARTH,
-      mip: mon,
-      domain: ALP-3,
-      rcm_version: fpsconv-x2yn2-v1,
-    } # Driver RACMO22E - EC-EARTH (technically it's RACMO23E, not available on CEDA)
-
+  # ####################
+  # UKCP
+  # ####################
   UKCP-GCM: &UKCP-GCM
   - {project: UKCP18, exp: rcp85, ensemble: "01", dataset: land-gcm, mip: mon, frequency: mon, domain: global_60km}
   - {project: UKCP18, exp: rcp85, ensemble: "02", dataset: land-gcm, mip: mon, frequency: mon, domain: global_60km}
@@ -292,6 +255,36 @@ regions:
     start_latitude: 40
     end_latitude: 50
 
+  alpine_NW: &alpine_NW
+    start_longitude: 1
+    end_longitude: 9
+    start_latitude: 46
+    end_latitude: 50
+
+  alpine_NE: &alpine_NE
+    start_longitude: 10
+    end_longitude: 17
+    start_latitude: 46
+    end_latitude: 50
+
+  alpine_SW: &alpine_SW
+    start_longitude: 1
+    end_longitude: 9
+    start_latitude: 40
+    end_latitude: 45
+
+  alpine_SE: &alpine_SE
+    start_longitude: 10
+    end_longitude: 17
+    start_latitude: 40
+    end_latitude: 45
+
+  CEE-3: &CEE-3
+    start_longitude: 11
+    end_longitude: 34
+    start_latitude: 40
+    end_latitude: 53
+
   aerosols_g: &aerosols_gutierrez
     start_longitude: -15
     end_longitude: 45
@@ -304,9 +297,21 @@ regions:
     start_latitude: 42
     end_latitude: 52
 
+  southern_FR: &s_FR
+    start_longitude: 2
+    end_longitude: 7
+    start_latitude: 43
+    end_latitude: 48
+
+  southern_DE: &s_DE
+    start_longitude: 6.5
+    end_longitude: 14
+    start_latitude: 47.5
+    end_latitude: 50
+
   # set REGION here
   region: &region
-    <<: *alpine
+    <<: *CEE-3
 
 hist_time: &hist_time
   start_year: 1996
@@ -325,8 +330,8 @@ preprocessors:
     regrid:
       target_grid:
         <<: *region
-        step_longitude: 1.5
-        step_latitude: 1.5
+        step_longitude: 2.5
+        step_latitude: 2.5
       scheme: linear
 
   regrid_RCM: &regrid_RCM
@@ -347,6 +352,8 @@ preprocessors:
 
   season_spatial_proc_GCM:
     custom_order: true
+    extract_region:
+      <<: *region
     climate_statistics:
       operator: mean
       period: season
@@ -356,6 +363,8 @@ preprocessors:
     
   season_spatial_proc_RCM:
     custom_order: true
+    extract_region:
+      <<: *region
     climate_statistics:
       operator: mean
       period: season
@@ -365,6 +374,8 @@ preprocessors:
 
   season_spatial_proc_CPM:
     custom_order: true
+    extract_region:
+      <<: *region
     climate_statistics:
       operator: mean
       period: season
@@ -381,12 +392,7 @@ preprocessors:
       period: season
     # the regrid is necessary because of awkward grids with some of the RCM data
     # which will prevent calculating area statistics.
-    regrid:
-      target_grid:
-        <<: *region
-        step_longitude: 1.5
-        step_latitude: 1.5
-      scheme: linear
+    <<: *regrid_GCM
     mask_landsea:
       mask_out: sea
     area_statistics:
@@ -444,6 +450,14 @@ diagnostics:
         <<: *box_preproc
         <<: *var_rcp85
         additional_datasets: *CORDEX-EUR11
+      box_hist_CORDEX-EUR11_2:
+        <<: *box_preproc
+        <<: *var_hist
+        additional_datasets: *CORDEX-EUR11_2
+      box_rcp85_CORDEX-EUR11_2:
+        <<: *box_preproc
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-EUR11_2
       box_hist_cordex_cpm:
         <<: *box_preproc
         <<: *var_hist
@@ -460,16 +474,16 @@ diagnostics:
         <<: *box_preproc
         <<: *var_rcp85_2
         additional_datasets: *CORDEX-CPM2
-      box_hist_cordex_cpm3:
-        <<: *box_preproc
-        <<: *var_hist
-        ensemble: r14i1p1
-        additional_datasets: *CORDEX-CPM3
-      box_rcp85_cordex_cpm3:
-        <<: *box_preproc
-        <<: *var_rcp85
-        ensemble: r13i1p1
-        additional_datasets: *CORDEX-CPM3
+      # box_hist_cordex_cpm3:
+      #   <<: *box_preproc
+      #   <<: *var_hist
+      #   ensemble: r14i1p1
+      #   additional_datasets: *CORDEX-CPM3
+      # box_rcp85_cordex_cpm3:
+      #   <<: *box_preproc
+      #   <<: *var_rcp85
+      #   ensemble: r13i1p1
+      #   additional_datasets: *CORDEX-CPM3
       box_hist_UKCP-GCM:
         <<: *box_preproc
         <<: *var_hist
@@ -531,6 +545,14 @@ diagnostics:
         <<: *var_rcp85
         additional_datasets: *CORDEX-EUR11
         preprocessor: season_spatial_proc_RCM
+      map_hist_CORDEX-EUR11_2:
+        <<: *var_hist
+        additional_datasets: *CORDEX-EUR11_2
+        preprocessor: season_spatial_proc_RCM
+      map_rcp85_CORDEX-EUR11_2:
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-EUR11_2
+        preprocessor: season_spatial_proc_RCM
       map_hist_cordex_cpm:
         <<: *var_hist
         additional_datasets: *CORDEX-CPM
@@ -547,16 +569,16 @@ diagnostics:
         <<: *var_rcp85_2
         additional_datasets: *CORDEX-CPM2
         preprocessor: season_spatial_proc_CPM
-      map_hist_cordex_cpm3:
-        <<: *var_hist
-        ensemble: r14i1p1
-        additional_datasets: *CORDEX-CPM3
-        preprocessor: season_spatial_proc_CPM
-      map_rcp85_cordex_cpm3:
-        <<: *var_rcp85
-        ensemble: r13i1p1
-        additional_datasets: *CORDEX-CPM3
-        preprocessor: season_spatial_proc_CPM
+      # map_hist_cordex_cpm3:
+      #   <<: *var_hist
+      #   ensemble: r14i1p1
+      #   additional_datasets: *CORDEX-CPM3
+      #   preprocessor: season_spatial_proc_CPM
+      # map_rcp85_cordex_cpm3:
+      #   <<: *var_rcp85
+      #   ensemble: r13i1p1
+      #   additional_datasets: *CORDEX-CPM3
+      #   preprocessor: season_spatial_proc_CPM
       map_hist_UKCP-GCM:
         <<: *var_hist
         additional_datasets: *UKCP-GCM

@@ -22,6 +22,15 @@ import matplotlib.pyplot as plt
 
 logger = logging.getLogger(os.path.basename(__file__))
 
+INSTITUTES = [
+    'IPSL',
+    'NCC',
+    'MPI-M',
+    'CNRM-CERFACS',
+    'ICHEC',
+    'MOHC',
+]
+
 CPM_DRIVERS = {
     'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
     'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
@@ -30,18 +39,10 @@ CPM_DRIVERS = {
     'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
     'ICTP-RegCM4-7-0': 'RegCM4-6 MOHC-HadGEM2-ES',
     'KNMI-HCLIM38h1-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
+    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES'
 }
 
-# Institutes that appear in front of the driver string for CORDEX RCMS
-INSTITUTES = [
-    'IPSL',
-    'NCC',
-    'MPI-M',
-    'CNRM-CERFACS',
-    'ICHEC',
-    'MOHC',
-    'KNMI'
-]
 
 def remove_institute_from_driver(driver_str):
     # remove the institute bit from the "driver" string
@@ -208,7 +209,12 @@ def main(cfg):
         models = group_metadata(projects[proj], "dataset")
 
         # empty dict for results
-        projections[proj] = {}
+        if proj == 'non-cordex-rcm':
+            proj = 'CORDEX'
+            
+        if proj not in projections.keys():
+            projections[proj] = {}
+        
         proj_key = proj
         # loop over the models
         for m in models:

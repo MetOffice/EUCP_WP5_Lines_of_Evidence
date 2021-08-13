@@ -243,6 +243,14 @@ cordex-cpm:
   cmor_type: "CMIP5"
   cmor_path: "cordex"
 
+non-cordex-rcm:
+  input_dir:
+    default: "{domain}/{driver}/{exp}/{frequency}/{short_name}"
+  input_file: "{short_name}_{domain}_{driver}_{exp}_{ensemble}_{dataset}_{rcm_version}_{frequency}*.nc"
+  output_file: "{short_name}_{domain}_{driver}_{dataset}_{exp}_{ensemble}_{rcm_version}_{frequency}"
+  cmor_type: "CMIP5"
+  cmor_path: "cordex"
+
 UKCP18:
   input_dir:
     default: "{dataset}/{domain}/{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
