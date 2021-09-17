@@ -49,6 +49,7 @@ rootpath:
   CORDEX: /project/champ/data/cordex/output/
   cordex-cpm: /project/applied/Data/cordex-cpm/
   non-cordex-rcm: /project/applied/Data/non-cordex-rcm/
+  non-cmip5-gcm: /project/applied/Data/non-cmip5-gcm/
   UKCP18: /project/ciid/projects/EUCP/wp5/UKCP18/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
@@ -59,6 +60,7 @@ drs:
   CORDEX: BADC
   cordex-cpm: default
   non-cordex-rcm: default
+  non-cmip5-gcm: default
   UKCP18: default
 #  OBS: default
 

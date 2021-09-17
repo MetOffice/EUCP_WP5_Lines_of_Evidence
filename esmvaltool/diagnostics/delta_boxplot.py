@@ -29,19 +29,39 @@ INSTITUTES = [
     'CNRM-CERFACS',
     'ICHEC',
     'MOHC',
+    'KNMI',
+    'HCLIMcom',
 ]
 
+# This dictionary maps CPM string to a RCM GCM string
 CPM_DRIVERS = {
     'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
     'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
-    'HCLIMcom-HCLIM38-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'HCLIMcom-HCLIM38-AROME': 'HCLIMcom-HCLIM38-ALADIN ICHEC-EC-EARTH',
     'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
     'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
-    'ICTP-RegCM4-7-0': 'RegCM4-6 MOHC-HadGEM2-ES',
-    'KNMI-HCLIM38h1-AROME': 'RACMO22E ICHEC-EC-EARTH',
-    'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
-    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES'
+    'ICTP-RegCM4-7-0': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+    'KNMI-HCLIM38h1-AROME': 'KNMI-RACMO23E KNMI-EC-EARTH',
 }
+
+PATH_TO_GLENS_CDFS = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/data_from_glen/'
+
+DOMAIN_FOR_CDF = 'PALP'
+
+
+def get_glens_cdf(domain, season, var):
+    # construct path to file
+    nc_file = f'{PATH_TO_GLENS_CDFS}{var}Anom_rcp85_eu_{domain}-WP3_Wall-N600000-P21_cdf_b9605_10y_{season.lower()}_20401201-20501130.nc'
+
+    # load data
+    try:
+        cube = iris.load_cube(nc_file)
+    except OSError:
+        logger.warning(f"Couldn't load: {nc_file}")
+        return None
+
+    # return data
+    return cube.data
 
 
 def process_projections_dict(proj_dict, season):
@@ -296,7 +316,8 @@ def prepare_scatter_data(x_data, y_data, project):
             # construct label
             labels.append(f"{actual_driver} {actual_rcm}")
     elif project == "UKCP18":
-        for ensemble in x_data:
+        # we expect y_data to be the RCM
+        for ensemble in y_data:
             x_vals.append(x_data[ensemble])
             y_vals.append(y_data[ensemble])
 
@@ -321,10 +342,10 @@ def prepare_scatter_data(x_data, y_data, project):
 def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
     if RCM_markers:
         label_props = {}
-        marker_props = enumerate((cycler(marker=['o', 'P']) * cycler(color=list('bgrcmy'))))
+        marker_props = enumerate((cycler(marker=['o', 'P', 'd']) * cycler(color=list('bgrcmy'))))
 
     max_val = 0
-    min_val = 0
+    min_val = 999999
 
     for i in range(len(x_data)):
         x_val = x_data[i]
@@ -355,109 +376,44 @@ def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
     ax.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
 
 
-def scatter_response(x_data, y_data, labels, season, suffix='', full_x=None):
-    plt.figure(figsize=(12.8, 9.6))
-    max_val = 0
-    min_val = 0
-
-    full_x_data = [y.data.item() for y in full_x]
-    y_array = []
+def simpler_scatter(drive_data, downscale_data, labels, suffix=""):
+    '''
+    Simpler scatter that just plots distributions and scatter of a pair of simulations
+    '''
+    plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
-    if full_x:
-        ax_scatter = plt.subplot(232)
-        ax_x = plt.subplot(231, sharey=ax_scatter)
-        ax_y = plt.subplot(233, sharey=ax_scatter)
-    else:
-        ax_scatter = plt.axes()
+    ax_violins = plt.subplot2grid((1,3), (0,0))
+    ax_scatter = plt.subplot2grid((1,3), (0,1), colspan=2, sharey=ax_violins)
 
-    last_label = None
-    if "cordex" in suffix:
-        marker_props = enumerate((cycler(marker=['o', 'P']) * cycler(color=list('rgbmy'))))
+    # make scatter
+    labelled_scatter(drive_data, downscale_data, labels, ax_scatter)
+    ax_scatter.set_xlabel('GCM')
+    ax_scatter.set_ylabel('RCM')
 
-    for i in range(len(x_data)):
-        x_val = x_data[i].extract(season_con).data
-        y_val = y_data[i].extract(season_con).data
+    # make violins
+    coloured_violin(drive_data, 1, ax_violins, 'lightgrey')
+    coloured_violin(downscale_data, 2, ax_violins, 'lightgrey')
 
-        if full_x:
-            y_array.append(y_val.item())
+    # set x labels
+    ax_violins.set_xticks(range(1, 3))
+    ax_violins.set_xticklabels(['Global', 'Regional'])
 
-        # update max and min value encountered
-        max_val = max(x_val, y_val, max_val)
-        min_val = min(x_val, y_val, min_val)
+    # also plot individual dots for each model..
+    plot_points(drive_data, 1, ax_violins, color='r')
+    plot_points(downscale_data, 2, ax_violins, color='r')
 
-        if "cordex" in suffix:
-            if labels[i].split()[-1] != last_label:
-                props = next(marker_props)
-                last_label = labels[i].split()[-1]
-            ax_scatter.scatter(
-                x_val, y_val, label=f"{i} - {labels[i]}",
-                color=props[1]['color'], marker=props[1]['marker']
-                )
-        else:
-            ax_scatter.scatter(x_val, y_val, label=f"{i} - {labels[i]}")
+    var = get_var(cfg)
+    plt.suptitle(f"{suffix} {var} change")
 
-        if labels[i].isdigit():
-            ax_scatter.text(x_val, y_val, labels[i])
-        else:
-            ax_scatter.text(x_val, y_val, i)
-
-    if not labels[i].isdigit():
-        h, ls = ax_scatter.get_legend_handles_labels()
-        ax_legend = plt.subplot(236)
-        ax_legend.axis('off')
-        ax_legend.legend(h, ls, ncol=2)
-
-    if suffix == "_cpm":
-        ax_scatter.set_ylabel("CPM response")
-        ax_scatter.set_xlabel("RCM response")
-    else:
-        ax_scatter.set_ylabel("RCM response")
-        ax_scatter.set_xlabel("GCM response")
-    ax_scatter.set_title(f"{get_var(cfg)} response")
-
-    # plot a diagonal equivalence line
-    ax_scatter.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
-
-    if full_x:
-        # violinplots
-        ax_x.violinplot(full_x_data)
-        for i in range(len(full_x_data)):
-            ax_x.plot(
-                    1,
-                    full_x_data[i],
-                    marker="o",
-                    fillstyle="none",
-                    color="k",
-                )
-        ax_x.axis('off')
-        if suffix == "_cpm":
-            ax_x.set_title('Full RCM ensemble')
-        else:
-            ax_x.set_title('Full GCM ensemble')
-
-        ax_y.violinplot(y_array)
-        for i in range(len(y_array)):
-            ax_y.plot(
-                    1,
-                    y_array[i],
-                    marker="o",
-                    fillstyle="none",
-                    color="k",
-                )
-        ax_y.axis('off')
-        if suffix == "_cpm":
-            ax_y.set_title('CPM ensemble')
-        else:
-            ax_y.set_title('RCM ensemble')
-
-    # save
-    plt.savefig(f"{cfg['plot_dir']}/scatter_{seasons[s]}{suffix}.png", bbox_inches='tight')
+    # save plot
+    plt.savefig(f"{cfg['plot_dir']}/simple_scatter_{suffix}.png", bbox_inches='tight')
     plt.close()
 
 
 def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, labels2, suffix=''):
     '''
+    A mega plot that shows distributions and scatter plots of GCM, RCM and CPM
     GCM_sc: GCMs for first scatter
     RCM_sc1: RCMs for first scatter
     RCM_sc2: RCMs for second scatter
@@ -524,9 +480,46 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     plt.close()
 
 
+def all_violins(datasets, labels, season):
+    ''' 
+    Plot violins and dots of the datasets
+    datasets: list of datasets
+    labels: list of labels
+    '''
+    # plot all of our data, plus Glen's method
+    var = get_var(cfg)
+
+    # if dataset has more than 10 points plot violin, otherwise don't
+    # always plot individual points
+    plt.figure(figsize=(19.2, 14.4))
+
+    ax = plt.axes()
+
+    for i, data in enumerate(datasets):
+        if len(data) > 10:
+            coloured_violin(data, i+1, ax)
+        plot_points(data, i+1, ax)
+
+    # now add on glen's data (if it exists)
+    glens_data = get_glens_cdf(DOMAIN_FOR_CDF, season, var)
+    if glens_data is not None:
+        i = i + 1
+        labels.append("Glen's distribution")
+        coloured_violin(glens_data, i+1, ax)
+
+    # set x labels
+    ax.set_xticks(range(1, i+2))
+    ax.set_xticklabels(labels)
+
+    plt.suptitle(f"{season} {var} change")
+
+    plt.savefig(f"{cfg['plot_dir']}/all_violins_{season}.png", bbox_inches='tight')
+    plt.close()
+
+
 def plot_points(points, x, ax, color='k'):
     for p in points:
-         ax.plot(x, p, marker="o", fillstyle="none", color=color)
+        ax.plot(x, p, marker="o", fillstyle="none", color=color)
 
 
 def coloured_violin(data, pos, ax, color=None):
@@ -604,7 +597,6 @@ def main(cfg):
     model_lists = {}
     cordex_drivers = []
     cordex_rcms = []
-    rcm_drivers = cfg['rcm_drivers']
     # loop over projects
     for proj in projects:
         # we now have a list of all the data entries..
@@ -614,6 +606,9 @@ def main(cfg):
         # empty dict for results
         if proj == 'non-cordex-rcm':
             proj = 'CORDEX'
+
+        if proj == 'non-cmip5-gcm':
+            proj = 'CMIP5'
             
         if proj not in projections.keys():
             projections[proj] = {}
@@ -676,46 +671,12 @@ def main(cfg):
     cordex_drivers = set(cordex_drivers)
     cordex_rcms = set(cordex_rcms)
 
-
     # reorganise and extract data for plotting
     plotting_dict = proj_dict_to_season_dict(projections)
 
     for season in plotting_dict.keys():
         # this section of the code does all the plotting..
-        plot_boxplots(plotting_dict[season], cordex_drivers, season, "_drivers")
-        plot_boxplots(plotting_dict[season], cordex_rcms, season, "_rcms")
-        simple_dots_plot(plotting_dict[season], list(cordex_drivers) + rcm_drivers, season)
-
-        # # scatter plots - regular cordex
-        # if all([p in projections for p in ["CORDEX", "CMIP5"]]):
-        #     rcm_points, gcm_points, labels, cmip5 = prepare_scatter_data(
-        #         projections["CORDEX"], projections["CMIP5"], "CORDEX", projections["CMIP5"]
-        #         )
-        #     scatter_response(gcm_points, rcm_points, labels, "_cordex_simple_aerosol", cmip5)
-
-        # # cordex with clever aerosol
-        # if all([p in projections for p in ["CORDEX_aerosol", "CMIP5"]]):
-        #     rcm_points, gcm_points, labels, cmip5 = prepare_scatter_data(
-        #         projections["CORDEX_aerosol"], projections["CMIP5"], "CORDEX", projections["CMIP5"]
-        #         )
-        #     scatter_response(gcm_points, rcm_points, labels, "_cordex_dynamic_aerosol", cmip5)
-
-        # # UKCP
-        # if all([p in projections for p in ["UKCP18 land-rcm", "UKCP18 land-gcm"]]):
-        #     rcm_points, gcm_points, labels, ukcp_gcm = prepare_scatter_data(
-        #         projections["UKCP18 land-rcm"], projections["UKCP18 land-gcm"], "UKCP18", projections["UKCP18 land-gcm"]
-        #         )
-        #     scatter_response(gcm_points, rcm_points, labels, "_UKCP", ukcp_gcm)
-
-        # # CPMs
-        # if all([p in projections for p in ["CORDEX", "CORDEX_aerosol", "cordex-cpm"]]):
-        #     all_cordex = projections["CORDEX"].copy()
-        #     all_cordex.update(projections["CORDEX_aerosol"])
-        #     cpm_points, rcm_points, cpm_labels = prepare_scatter_data(
-        #         projections["cordex-cpm"], all_cordex, "CPM"
-        #         )
-        #     scatter_response(gcm_points, rcm_points, cpm_labels, "_cpm", all_gcm)
-
+        
         # mega scatter plot
         # need to prepare subsets of projects
         all_CORDEX = {}
@@ -729,6 +690,22 @@ def main(cfg):
             list(plotting_dict[season]['CMIP5'].values()), list(all_CORDEX.values()),
             labels1, labels2, f'{season}'
         )
+
+        # simpler scatter for UKCP
+        UKCP_g, UKCP_r, UKCP_labels = prepare_scatter_data(
+            plotting_dict[season]['UKCP18 land-gcm'], plotting_dict[season]['UKCP18 land-rcm'], "UKCP18")
+        simpler_scatter(UKCP_g, UKCP_r, UKCP_labels, f'UKCP_{season}')
+
+        # side by side violins / dots for all models plus Glen's method...
+        data_for_violins = [
+            plotting_dict[season]['CMIP6'].values(),
+            plotting_dict[season]['CMIP5'].values(),
+            rcm_sc1, cpm_sc, UKCP_g, UKCP_r
+            ]
+        labels_for_violins = [
+            'CMIP6', 'CMIP5', 'CORDEX', 'CPM', 'UKCP_global', 'UKCP_regional'
+            ]
+        all_violins(data_for_violins, labels_for_violins, season)
 
         # save some plotting data for notebook experiments
         # create dictionary of all the required data for one particular season

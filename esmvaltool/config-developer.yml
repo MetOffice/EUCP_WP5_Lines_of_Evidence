@@ -251,6 +251,13 @@ non-cordex-rcm:
   cmor_type: "CMIP5"
   cmor_path: "cordex"
 
+non-cmip5-gcm:
+  input_dir:
+    default: "{dataset}/{exp}/{mip}/{short_name}"
+  input_file: "{short_name}_{mip}_{dataset}_{exp}_{ensemble}_*.nc"
+  output_file: "{project}_{dataset}_{mip}_{exp}_{ensemble}_{short_name}"
+  cmor_type: "CMIP5"
+
 UKCP18:
   input_dir:
     default: "{dataset}/{domain}/{exp}/{ensemble}/{short_name}/{frequency}/{latestversion}"
