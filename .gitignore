@@ -1,8 +1,12 @@
 # ignore output files
-esmvaltool_output/
+esmvaltool_output
+output_runs_of_interest
 
 # vscode config
 .vscode/
 
 # ignore slurm output
 *.out
+
+# tars
+*.tar.gz

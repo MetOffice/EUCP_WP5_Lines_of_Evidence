@@ -47,7 +47,7 @@ rootpath:
   #  RAWOBS: ~/rawobs_inputpath
   default: ~/default_inputpath
   CORDEX: /project/champ/data/cordex/output/
-  cordex-fpsc: /project/applied/Data/cordex-fpsc/
+  cordex-cpm: /project/applied/Data/cordex-cpm/
   UKCP18: /project/ciid/projects/EUCP/wp5/UKCP18/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc

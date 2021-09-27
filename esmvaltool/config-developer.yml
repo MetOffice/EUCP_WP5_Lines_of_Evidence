@@ -237,9 +237,9 @@ CORDEX:
   cmor_type: "CMIP5"
   cmor_path: "cordex"
 
-cordex-fpsc:
+cordex-cpm:
   input_dir:
-    default: "{domain}/{exp}/{frequency}/{short_name}"
+    default: "{domain}/{driver}/{exp}/{frequency}/{short_name}"
   input_file: "{short_name}_{domain}_{driver}_{exp}_{ensemble}_{dataset}_{rcm_version}_{frequency}*.nc"
   output_file: "{short_name}_{domain}_{driver}_{dataset}_{exp}_{ensemble}_{rcm_version}_{frequency}"
   cmor_type: "CMIP5"
