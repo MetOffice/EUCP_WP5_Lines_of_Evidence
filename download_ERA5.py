@@ -6,9 +6,10 @@ c.retrieve(
     "reanalysis-era5-single-levels-monthly-means",
     {
         "product_type": "monthly_averaged_reanalysis",
-        "variable": "surface_net_solar_radiation",
+        "variable": "mean_sea_level_pressure",
         # "variable": [
         #     "2m_temperature",
+        #     "mean_sea_level_pressure",
         #     "surface_net_solar_radiation",
         #     "surface_solar_radiation_downwards",
         #     "surface_thermal_radiation_downwards",
