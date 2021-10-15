@@ -13,8 +13,8 @@ import os
 import logging
 import re
 import pickle
+from iris.io import save
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 from cycler import cycler
@@ -31,6 +31,7 @@ INSTITUTES = [
     'MOHC',
     'KNMI',
     'HCLIMcom',
+    'SMHI'
 ]
 
 # This dictionary maps CPM string to a RCM GCM string
@@ -41,12 +42,23 @@ CPM_DRIVERS = {
     'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
     'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
     'ICTP-RegCM4-7-0': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
     'KNMI-HCLIM38h1-AROME': 'KNMI-RACMO23E KNMI-EC-EARTH',
+    'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
+    'HadREM3-RA-UM10.1': 'MOHC-HadGEM3-GC3.1-N512 MOHC-HadGEM2-ES'
 }
 
-PATH_TO_GLENS_CDFS = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/data_from_glen/'
+PATH_TO_GLENS_CDFS = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/weighting_data/glen/'
+PATH_TO_CLIMWIP_DATA = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/weighting_data/ClimWIP/'
 
-DOMAIN_FOR_CDF = 'PALP'
+SEASONS_DICT = {'DJF': 0, 'MAM': 1, 'JJA': 2, 'SON': 3}
+
+DOMAIN_FOR_CDF = {
+    'ALP-3': 'PALP',
+    'CEE-3': 'CEEU',
+    'NWE-3': 'NWEU',
+    'NEU-3': 'NEU'
+}
 
 
 def get_glens_cdf(domain, season, var):
@@ -62,6 +74,30 @@ def get_glens_cdf(domain, season, var):
 
     # return data
     return cube.data
+
+
+def get_ClimWIP_percentiles(domain, season, var):
+    # construct path to files
+    weighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_weighted_CMIP5_{domain}_1980-2014_2031-2060.nc'
+    unweighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_unweighted_CMIP5_{domain}_1980-2014_2031-2060.nc'
+    # weighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_weighted_CMIP5_2_{domain}_1996-2005_2041-2050.nc'
+    # unweighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_unweighted_CMIP5_2_{domain}_1996-2005_2041-2050.nc'
+
+    # load data
+    try:
+        weighted_cube = iris.load_cube(weighted_file)
+        unweighted_cube = iris.load_cube(unweighted_file)
+    except OSError:
+        logger.warning(f"Couldn't load: {weighted_file} or {unweighted_file}")
+        return None, None
+
+    # extract season
+    sea_con = iris.Constraint(season_number=SEASONS_DICT[season])
+    weighted_cube = weighted_cube.extract(sea_con)
+    unweighted_cube = unweighted_cube.extract(sea_con)
+
+    # return data
+    return weighted_cube.data, unweighted_cube.data
 
 
 def process_projections_dict(proj_dict, season):
@@ -85,7 +121,7 @@ def process_projections_dict(proj_dict, season):
 
 def proj_dict_to_season_dict(proj_dict):
     # take a dictionary of data keyed by project, and reorganise to key by season
-    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "SON"}
 
     season_dict = {}
     # output dict will be keyed by season, then project, then model
@@ -142,158 +178,6 @@ def get_var(cfg):
     var = var[0]
 
     return var
-
-
-def plot_boxplots(projections, legend_models, season, fname_suffix=None):
-    # we now have all the projections in the projections dictionary
-    # check what driving models we have from CORDEX and decide on some fixed colours for them..
-    # get default colours
-    prop_cycle = plt.rcParams["axes.prop_cycle"]
-    colours = prop_cycle.by_key()["color"]
-    p_cycler = (cycler(color=colours) * cycler(marker=["o", "D", "P", "X"]))
-    enum_props = enumerate(p_cycler)
-    legend_colours = {}
-    legend_markers = {}
-    for k in legend_models:
-        k_props = next(enum_props)
-        legend_colours[k] = k_props[1]['color']
-        legend_markers[k] = k_props[1]['marker']
-
-    # special models that have an extra large symbol
-    # special_models = ["RACMO22E", "HadREM3-GA7-05"]
-    special_models = []
-
-    # get variable for title later
-    var = get_var(cfg)
-
-    # now lets plot them
-    p_keys = reorder_keys(list(projections.keys()))
-
-    logger.info("Plotting")
-
-    box_values = []
-    for p in p_keys:
-        box_values.append(list(projections[p].values()))
-
-    plt.figure(figsize=(12.8, 9.6))
-    # plot all projects as boxplots
-    plt.boxplot(box_values)
-
-    plotted_models = set()
-
-    # now plot dots
-    for i, p in enumerate(p_keys):
-        for m, v in projections[p].items():
-            if p[:6].upper() == "CORDEX":
-                # extract the driving model and RCM from the string
-                rcm, driver = m.split(" ")
-                # find the legend color
-                if driver in legend_colours.keys():
-                    label = driver
-                    color = legend_colours[driver]
-                    marker = legend_markers[driver]
-                else:
-                    label = rcm
-                    color = legend_colours[rcm]
-                    marker = legend_markers[rcm]
-                alpha = 1
-                if any(i in m for i in special_models):
-                    sz = 100
-                else:
-                    sz = 25
-                # Check if we have already plotted this model before..
-                # This means we only use the label once, and just end up with one legend entry per model
-                if any(i in m for i in plotted_models):
-                    label = None
-                else:
-                    plotted_models.add(label)
-            elif "CMIP" in p:
-                model = [x for x in legend_models if m in x]
-                # check if model matches any of the CORDEX ones
-                if model:
-                    model = model[0]
-                    color = legend_colours[model]
-                    alpha = 1
-                    sz = 25
-                    # Check if we have already plotted this model before..
-                    # This means we only use the label once
-                    if any(i in model for i in plotted_models):
-                        label = None
-                    else:
-                        plotted_models.add(model)
-                else:
-                    color = "k"
-                    alpha = 0.3
-                    label = None
-                    marker = "."
-                    sz = 10
-            else:
-                color = "k"
-                alpha = 0.3
-                label = None
-                marker = "."
-                sz = 10
-            # Add some random "jitter" to the x-axis
-            x = np.random.normal(i + 1, 0.05, size=1)
-            plt.scatter(x, v, label=label, color=color, alpha=alpha, s=sz, marker=marker)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-    plt.axhline(0, linestyle="dotted", color="k")
-    plt.gca().set_xticklabels(p_keys)
-    plt.title(f"{season} {var} change")
-    plt.tight_layout()
-    plt.savefig(f"{cfg['plot_dir']}/boxplot_{season}{fname_suffix}.png", bbox_inches='tight')
-    plt.close()
-
-
-def simple_dots_plot(projections, cordex_drivers, season, fname_suffix=''):
-    # get variable for title later
-    var = get_var(cfg)
-
-    # now lets plot them
-    logger.info("Plotting")
-    p_keys = reorder_keys(list(projections.keys()))
-
-    plt.figure(figsize=(12.8, 9.6))
-
-    for i, p in enumerate(p_keys):
-        for m, v in projections[p].items():
-            plt.plot(
-                    i + 1,
-                    v,
-                    marker="o",
-                    fillstyle="none",
-                    color="k",
-                )
-            if p == "CMIP5":
-                if any(m in d for d in cordex_drivers):
-                    plt.plot(
-                        i + 1,
-                        v,
-                        marker="o",
-                        fillstyle="full",
-                        color="k",
-                        markersize=12,
-                    )
-            elif "CORDEX" in p:
-                if any(m == d for d in cordex_drivers):
-                    plt.plot(
-                        i + 1,
-                        v,
-                        marker="o",
-                        fillstyle="full",
-                        color="k",
-                        markersize=12,
-                    )
-        if 'CMIP' in p:
-            plt.violinplot(list(projections[p].values()),
-                           positions=[i + 1],
-                           showmedians=True)
-    plt.gca().set_xticks(range(1, len(p_keys) + 1))
-    plt.gca().set_xticklabels(p_keys)
-    plt.title(f"{season} {var} change")
-    plt.tight_layout()
-    plt.savefig(f"{cfg['plot_dir']}/violin_{season}{fname_suffix}.png", bbox_inches='tight')
-    plt.close()
 
 
 def prepare_scatter_data(x_data, y_data, project):
@@ -370,10 +254,15 @@ def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
         else:
             ax.scatter(x_val, y_val, label=f"{i} - {labels[i]}")
 
-        ax.text(x_val, y_val, i)
+        ax.text(x_val, y_val, i, fontsize=10)
 
     # plot a diagonal equivalence line
     ax.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
+
+    # plot zero lines
+    if min_val < 0:
+        ax.axhline(ls=':', color='k', alpha=0.75)
+        ax.axvline(ls=':', color='k', alpha=0.75)
 
 
 def simpler_scatter(drive_data, downscale_data, labels, suffix=""):
@@ -383,8 +272,8 @@ def simpler_scatter(drive_data, downscale_data, labels, suffix=""):
     plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
-    ax_violins = plt.subplot2grid((1,3), (0,0))
-    ax_scatter = plt.subplot2grid((1,3), (0,1), colspan=2, sharey=ax_violins)
+    ax_violins = plt.subplot2grid((1, 3), (0, 0))
+    ax_scatter = plt.subplot2grid((1, 3), (0, 1), colspan=2, sharey=ax_violins)
 
     # make scatter
     labelled_scatter(drive_data, downscale_data, labels, ax_scatter)
@@ -448,13 +337,14 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     # legend information
     h1, l1 = ax_scatter1.get_legend_handles_labels()
     h2, l2 = ax_scatter2.get_legend_handles_labels()
-    ax_violins.legend(h1 + h2, l1 + l2, bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    ax_violins.legend(
+        h1 + h2, l1 + l2, bbox_to_anchor=(1.05, 1.0), loc='upper left', fontsize=10)
 
     # create GCM / RCM / CPM violins / dots
     # GCMs go in position 1, RCMs position 2, CPMs position 3
     coloured_violin(all_GCM, 1, ax_violins, 'lightgrey')
-    coloured_violin(all_RCM, 2, ax_violins,'lightgrey')
-    coloured_violin(CPM, 3, ax_violins,'lightgrey')
+    coloured_violin(all_RCM, 2, ax_violins, 'lightgrey')
+    coloured_violin(CPM, 3, ax_violins, 'lightgrey')
     
     # set x labels
     ax_violins.set_xticks(range(1, 4))
@@ -501,15 +391,28 @@ def all_violins(datasets, labels, season):
         plot_points(data, i+1, ax)
 
     # now add on glen's data (if it exists)
-    glens_data = get_glens_cdf(DOMAIN_FOR_CDF, season, var)
+    glens_data = get_glens_cdf(DOMAIN_FOR_CDF[cfg["reg_name"]["name"]], season, var)
     if glens_data is not None:
         i = i + 1
-        labels.append("Glen's distribution")
+        labels.append("Glen's pdf")
         coloured_violin(glens_data, i+1, ax)
 
+    # add ClimWIP data if we have it
+    climWIP_weighted, climWIP_unweighted = get_ClimWIP_percentiles(cfg["reg_name"]["name"], season, var)
+    if climWIP_weighted is not None:
+        i = i + 1
+        labels.append('CMIP5 ClimWIP w|u')
+        coloured_violin(climWIP_weighted, i+0.75, ax)
+        coloured_violin(climWIP_unweighted, i+1.25, ax)
+
+
     # set x labels
-    ax.set_xticks(range(1, i+2))
-    ax.set_xticklabels(labels)
+    plt.xticks(range(1, i+2), labels, rotation=45, ha="right")
+    # ax.set_xticks(range(1, i+2))
+    # ax.set_xticklabels(labels)
+
+    # add zero line
+    ax.axhline(ls=':', color='k', alpha=0.75)
 
     plt.suptitle(f"{season} {var} change")
 
@@ -523,7 +426,7 @@ def plot_points(points, x, ax, color='k'):
 
 
 def coloured_violin(data, pos, ax, color=None):
-    vparts = ax.violinplot(data, [pos], showmedians=True)
+    vparts = ax.violinplot(data, [pos], showmedians=True, quantiles=[0.05, 0.95])
 
     if color:
         for part in ['bodies', 'cbars', 'cmins', 'cmaxes']:
@@ -568,6 +471,8 @@ def reorder_keys(keys):
 
 def main(cfg):
     # The config object is a dict of all the metadata from the pre-processor
+    # set global plotting settings
+    plt.rcParams.update({'font.size': 18})
 
     # get variable processed
     var = get_var(cfg)
@@ -583,12 +488,6 @@ def main(cfg):
     # how to uniquely define a dataset varies by project, for CMIP it's simple, just dataset...
     # for CORDEX, combo of dataset and driver (and possibly also domain if we start adding those)
     # also gets more complex if we start adding in different ensembles..
-
-    # get "special" RCMS if being used
-    if 'special_rcms' in cfg:
-        spec_rcms = cfg['special_rcms']
-    else:
-        spec_rcms = None
 
     # This section of the code loads and organises the data to be ready for plotting
     logger.info("Loading data")
@@ -655,16 +554,6 @@ def main(cfg):
                     model_lists[proj] = []
                 model_lists[proj].append(f"{m}")
 
-        # seperate CORDEX RCMs into special and normal if needed
-        if spec_rcms and "CORDEX" in proj.upper():
-            # create new dictionary entry if needed
-            if 'CORDEX_aerosol' not in projections:
-                projections['CORDEX_aerosol'] = {}
-            for m in models:
-                if m in spec_rcms:
-                    data = projections[proj].pop(m)
-                    projections['CORDEX_aerosol'][m] = data
-
         # remove any empty categories (i.e. UKCP18 which has been split into rcm and gcm)
         if projections[proj] == {}:
             del projections[proj]
@@ -679,15 +568,12 @@ def main(cfg):
         
         # mega scatter plot
         # need to prepare subsets of projects
-        all_CORDEX = {}
-        all_CORDEX.update(plotting_dict[season]['CORDEX'])
-        all_CORDEX.update(plotting_dict[season]['CORDEX_aerosol'])
-        gcm_sc, rcm_sc1, labels1 = prepare_scatter_data(plotting_dict[season]['CMIP5'], all_CORDEX, 'CORDEX')
-        rcm_sc2, cpm_sc, labels2 = prepare_scatter_data(all_CORDEX, plotting_dict[season]['cordex-cpm'], 'CPM')
+        gcm_sc, rcm_sc1, labels1 = prepare_scatter_data(plotting_dict[season]['CMIP5'], plotting_dict[season]['CORDEX'], 'CORDEX')
+        rcm_sc2, cpm_sc, labels2 = prepare_scatter_data(plotting_dict[season]['CORDEX'], plotting_dict[season]['cordex-cpm'], 'CPM')
 
         mega_scatter(
             gcm_sc, rcm_sc1, rcm_sc2, cpm_sc,
-            list(plotting_dict[season]['CMIP5'].values()), list(all_CORDEX.values()),
+            list(plotting_dict[season]['CMIP5'].values()), list(plotting_dict[season]['CORDEX'].values()),
             labels1, labels2, f'{season}'
         )
 
@@ -703,7 +589,7 @@ def main(cfg):
             rcm_sc1, cpm_sc, UKCP_g, UKCP_r
             ]
         labels_for_violins = [
-            'CMIP6', 'CMIP5', 'CORDEX', 'CPM', 'UKCP_global', 'UKCP_regional'
+            'CMIP6', 'CMIP5', 'CORDEX', 'CPM', 'UKCP_g', 'UKCP_r'
             ]
         all_violins(data_for_violins, labels_for_violins, season)
 
@@ -719,13 +605,16 @@ def main(cfg):
             pickle_dict['cpm'] = cpm_sc
             pickle_dict['CMIP6'] = list(plotting_dict[season]['CMIP6'].values())
             pickle_dict['CMIP5'] = list(plotting_dict[season]['CMIP5'].values())
-            pickle_dict['CORDEX'] = list(all_CORDEX.values())
+            pickle_dict['CORDEX'] = list(plotting_dict[season]['CORDEX'].values())
             pickle_dict['UKCP18 land-gcm'] = plotting_dict[season]['UKCP18 land-gcm']
             pickle_dict['UKCP18 land-rcm'] = plotting_dict[season]['UKCP18 land-rcm']
 
+            # save details of values used for plotting the boxplots
+            save_anoms_txt(plotting_dict[season]['CMIP5'], f'{cfg["work_dir"]}/CMIP5_{season}.txt')
+            save_anoms_txt(plotting_dict[season]['CORDEX'], f'{cfg["work_dir"]}/CORDEX_{season}.txt')
+            save_anoms_txt(plotting_dict[season]['cordex-cpm'], f'{cfg["work_dir"]}/CPM_{season}.txt')
+
             pickle.dump(pickle_dict, open(f'{cfg["work_dir"]}/sample_plotting_data.pkl', 'wb'))
-
-
 
     # print all datasets used
     print("Input models for plots:")
