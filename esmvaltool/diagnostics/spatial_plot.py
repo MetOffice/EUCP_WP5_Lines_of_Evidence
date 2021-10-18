@@ -119,6 +119,15 @@ def get_anomalies(ds_list, relative=False):
     else:
         anomaly = fut_cube - base_cube
 
+    # ensure longitude coord is on -180 to 180 range
+    try:
+        anomaly = anomaly.intersection(longitude=(-180.0, 180.0))
+    except ValueError:
+        # remove and re add bounds to attempt to fix
+        anomaly.coord('longitude').bounds = None
+        anomaly.coord('longitude').guess_bounds()
+        anomaly = anomaly.intersection(longitude=(-180.0, 180.0))
+
     return anomaly
 
 
@@ -174,7 +183,14 @@ def plot_map(pdata, extent, var, ax, legend=False):
     if pdata.coord("longitude").ndim == 1:
         # TODO This will probably cause issues if it's ever run with data
         # that straddles the dateline, so a check should be added.
-        plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+        try:
+            plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+        except ValueError:
+            plot_cube = pdata
+            plot_cube.coord('longitude').bounds = None
+            plot_cube.coord('longitude').guess_bounds()
+            plot_cube = plot_cube.intersection(longitude=(-180.0, 180.0))
+            
         plot_cube.coord("longitude").circular = False
     else:
         plot_cube = pdata
@@ -253,7 +269,8 @@ def main(cfg):
                     elif d == 'MPI':
                         d = 'MPI-M-MPI-ESM-LR'
                     
-                    cordex_drivers.append(d)
+                    if proj == "CORDEX":
+                        cordex_drivers.append(d)
             elif proj == "UKCP18":
                 # go deeper to deal with ensembles and datasets
                 # split UKCP into seperate GCM and RCM
@@ -320,7 +337,8 @@ def main(cfg):
             scheme = 'area_weighted'
         
         if grid:
-            regrid_mean = regrid(projections[p]['mean'], grid, scheme)
+            src = projections[p]['mean']
+            regrid_mean = regrid(src, grid, scheme)
             projections[p]['mean_rg'] = regrid_mean
 
     # compute regrid diffs
