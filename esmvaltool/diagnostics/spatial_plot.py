@@ -29,18 +29,23 @@ INSTITUTES = [
     'CNRM-CERFACS',
     'ICHEC',
     'MOHC',
+    'KNMI',
+    'HCLIMcom',
+    'SMHI'
 ]
 
+# This dictionary maps CPM string to a RCM GCM string
 CPM_DRIVERS = {
     'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
     'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
-    'HCLIMcom-HCLIM38-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'HCLIMcom-HCLIM38-AROME': 'HCLIMcom-HCLIM38-ALADIN ICHEC-EC-EARTH',
     'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
     'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
-    'ICTP-RegCM4-7-0': 'RegCM4-6 MOHC-HadGEM2-ES',
-    'KNMI-HCLIM38h1-AROME': 'RACMO22E ICHEC-EC-EARTH',
+    'ICTP-RegCM4-7-0': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+    'KNMI-HCLIM38h1-AROME': 'KNMI-RACMO23E KNMI-EC-EARTH',
     'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
-    'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES'
+    'HadREM3-RA-UM10.1': 'MOHC-HadGEM3-GC3.1-N512 MOHC-HadGEM2-ES'
 }
 
 
@@ -84,7 +89,7 @@ def process_projections_dict(proj_dict, season):
             data = v.extract(season_con)
             # if the result is a scalar cube, just store the value
             # else store the whole cube
-            if data.ndim == 1:
+            if data.ndim == 0:
                 out_data[k] = data.data.item()
             else:
                 out_data[k] = data
@@ -114,6 +119,15 @@ def get_anomalies(ds_list, relative=False):
     else:
         anomaly = fut_cube - base_cube
 
+    # ensure longitude coord is on -180 to 180 range
+    try:
+        anomaly = anomaly.intersection(longitude=(-180.0, 180.0))
+    except ValueError:
+        # remove and re add bounds to attempt to fix
+        anomaly.coord('longitude').bounds = None
+        anomaly.coord('longitude').guess_bounds()
+        anomaly = anomaly.intersection(longitude=(-180.0, 180.0))
+
     return anomaly
 
 
@@ -137,6 +151,9 @@ def compute_multi_model_stats(cl, agg):
             coord.long_name = None
             coord.attributes = None
 
+        if c.coords('height'):
+            c.remove_coord('height')
+
     merged_cube = cl.merge_cube()
 
     # now compute the stats
@@ -148,32 +165,43 @@ def compute_multi_model_stats(cl, agg):
 def plot_map(pdata, extent, var, ax, legend=False):
     ax.set_extent(extent)
     # set scales
-    if var == "pr":
+    if var in ("pr", "pr_diff"):
         vmn = -30
         vmx = 30
         # cmap = "brewer_RdYlBu_11"
         cmap = "RdBu"
+    elif var == "tas_diff":
+        vmn = -1
+        vmx = 1
+        cmap = "bwr"
     else:
         vmn = 0.5
         vmx = 5
-        #cmap = "brewer_YlOrRd_09"
-        cmap = "magma_r"
+        cmap = "brewer_YlOrRd_09"
+        # cmap = "magma_r"
     # ensure longitude coordinates straddle the meridian for GCM origin data
     if pdata.coord("longitude").ndim == 1:
         # TODO This will probably cause issues if it's ever run with data
         # that straddles the dateline, so a check should be added.
-        plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+        try:
+            plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+        except ValueError:
+            plot_cube = pdata
+            plot_cube.coord('longitude').bounds = None
+            plot_cube.coord('longitude').guess_bounds()
+            plot_cube = plot_cube.intersection(longitude=(-180.0, 180.0))
+            
         plot_cube.coord("longitude").circular = False
     else:
         plot_cube = pdata
     if legend:
-        qplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
+        cmesh = qplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
     else:
-        iplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
+        cmesh = iplt.pcolormesh(plot_cube, vmin=vmn, vmax=vmx, cmap=cmap)
     ax.coastlines()
     ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
 
-    return ax
+    return cmesh
 
 
 def main(cfg):
@@ -212,6 +240,9 @@ def main(cfg):
         if proj == 'non-cordex-rcm':
             proj = 'CORDEX'
             
+        if proj == 'non-cmip5-gcm':
+            proj = 'CMIP5'
+        
         if proj not in projections.keys():
             projections[proj] = {}
         
@@ -238,7 +269,8 @@ def main(cfg):
                     elif d == 'MPI':
                         d = 'MPI-M-MPI-ESM-LR'
                     
-                    cordex_drivers.append(d)
+                    if proj == "CORDEX":
+                        cordex_drivers.append(d)
             elif proj == "UKCP18":
                 # go deeper to deal with ensembles and datasets
                 # split UKCP into seperate GCM and RCM
@@ -287,7 +319,6 @@ def main(cfg):
             if f'{rcm} {d}' in list(CPM_DRIVERS.values()):
                 projections['CPM_drivers'][f'{rcm} {d}'] = projections['CORDEX'][rcm][d]
 
-
     # compute multi model means
     for p in projections:
         mm_mean = compute_multi_model_stats(
@@ -306,7 +337,8 @@ def main(cfg):
             scheme = 'area_weighted'
         
         if grid:
-            regrid_mean = regrid(projections[p]['mean'], grid, scheme)
+            src = projections[p]['mean']
+            regrid_mean = regrid(src, grid, scheme)
             projections[p]['mean_rg'] = regrid_mean
 
     # compute regrid diffs
@@ -317,7 +349,6 @@ def main(cfg):
         elif p == 'cordex-cpm':
             diff = projections[p]['mean_rg'] - projections['CPM_drivers']['mean']
             projections[p]['diff_rg'] = diff
-
 
     # this section of the code does the plotting..
     # we now have all the projections in the projections dictionary
@@ -365,7 +396,7 @@ def main(cfg):
         plt.figure(figsize=(12.8, 9.6))
         # plots should include. All CMIP5, CORDEX drivers, CORDEX, CPM drivers, CPM.
         ax = plt.subplot(331, projection=ccrs.PlateCarree())
-        plot_map(projections['CMIP5']['mean'].extract(scon), extent, var, ax)
+        cmesh = plot_map(projections['CMIP5']['mean'].extract(scon), extent, var, ax)
         plt.title('CMIP5')
 
         ax = plt.subplot(334, projection=ccrs.PlateCarree())
@@ -378,7 +409,7 @@ def main(cfg):
 
         # plot diff of CORDEX to CMIP
         ax = plt.subplot(336, projection=ccrs.PlateCarree())
-        plot_map(projections['CORDEX']['diff_rg'].extract(scon), extent, var, ax)
+        cmesh_diff = plot_map(projections['CORDEX']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
         plt.title('CORDEX - CMIP5 diff')
 
         ax = plt.subplot(337, projection=ccrs.PlateCarree())
@@ -391,16 +422,22 @@ def main(cfg):
 
         # plot diff of CPM to CORDEX
         ax = plt.subplot(339, projection=ccrs.PlateCarree())
-        plot_map(projections['cordex-cpm']['diff_rg'].extract(scon), extent, var, ax)
+        plot_map(projections['cordex-cpm']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
         plt.title('CPM - CORDEX diff')
 
-        # plot diff of CPM to CORDEX
+        # add legends
+        ax = plt.subplot(332)
+        ax.axis("off")
+        plt.colorbar(cmesh, orientation="horizontal")
+
+        ax = plt.subplot(333)
+        ax.axis("off")
+        plt.colorbar(cmesh_diff, orientation="horizontal")
 
         plt.suptitle(f'{seasons[s]} {var} change')
         plt.savefig(
             f"{cfg['plot_dir']}/{seasons[s]}/all_means_map_{seasons[s]}.png"
         )
-
 
     # print all datasets used
     print("Input models for plots:")

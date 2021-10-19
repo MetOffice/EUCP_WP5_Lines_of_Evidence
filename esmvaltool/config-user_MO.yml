@@ -43,14 +43,14 @@ profile_diagnostic: false
 rootpath:
   CMIP5: /project/champ/data/cmip5/output1/
   CMIP6: /project/champ/data/CMIP6/
-  #  OBS: ~/obs_inputpath
-  #  RAWOBS: ~/rawobs_inputpath
-  default: ~/default_inputpath
+  # OBS: ~/obs_inputpath
+  # RAWOBS: ~/rawobs_inputpath
   CORDEX: /project/champ/data/cordex/output/
   cordex-cpm: /project/applied/Data/cordex-cpm/
   non-cordex-rcm: /project/applied/Data/non-cordex-rcm/
   non-cmip5-gcm: /project/applied/Data/non-cmip5-gcm/
   UKCP18: /project/ciid/projects/EUCP/wp5/UKCP18/
+  native6: /home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/observations
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
 # See config-developer.yml for definitions.
@@ -62,6 +62,7 @@ drs:
   non-cordex-rcm: default
   non-cmip5-gcm: default
   UKCP18: default
+  native6: eucp
 #  OBS: default
 
 # Site-specific entries: Jasmin
