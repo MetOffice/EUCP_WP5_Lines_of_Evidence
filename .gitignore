@@ -10,3 +10,7 @@ output_runs_of_interest
 
 # tars
 *.tar.gz
+
+data_for_peter/
+weighting_data/
+observations/
