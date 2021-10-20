@@ -10,10 +10,11 @@ NAME_DICT = {
     "2 metre temperature": ("tas", "K"),
     "Surface solar radiation downwards": ("rsds", "W m-2"),
     "Surface net solar radiation": ("rsns", "W m-2"),
+    "Mean sea level pressure": ("psl", "Pa"),
 }
 
 # original file downloaded from COPERNICUS
-SOURCE = "download1.nc"
+SOURCE = "download.nc"
 OUT_FOLDER = "observations/ERA5/"
 
 
