@@ -185,13 +185,13 @@ def plot_map(pdata, extent, var, ax, legend=False):
         # that straddles the dateline, so a check should be added.
         try:
             plot_cube = pdata.intersection(longitude=(-180.0, 180.0))
+            plot_cube.coord("longitude").circular = False
         except ValueError:
             plot_cube = pdata
             plot_cube.coord('longitude').bounds = None
-            plot_cube.coord('longitude').guess_bounds()
             plot_cube = plot_cube.intersection(longitude=(-180.0, 180.0))
-            
-        plot_cube.coord("longitude").circular = False
+            plot_cube.coord("longitude").circular = False
+            plot_cube.coord('longitude').guess_bounds()
     else:
         plot_cube = pdata
     if legend:
