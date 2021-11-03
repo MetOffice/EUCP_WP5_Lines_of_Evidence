@@ -133,7 +133,9 @@ def get_anomalies(ds_list, relative=False):
 
 def compute_multi_model_stats(cl, agg):
     # given cubes, apply the supplied iris aggregator to it and return the result
-
+    if len(cl) == 1:
+        return cl[0]
+    
     cl = iris.cube.CubeList(cl)
 
     # sort attributes
@@ -356,7 +358,7 @@ def main(cfg):
     # now lets plot them
     # first we need to process the dictionary, and move the data into a list of vectors
     # the projections object is the key one that contains all our data..
-    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "OND"}
+    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "SON"}
     logger.info("Plotting")
     extent = (
         cfg["domain"]["start_longitude"] - 2,

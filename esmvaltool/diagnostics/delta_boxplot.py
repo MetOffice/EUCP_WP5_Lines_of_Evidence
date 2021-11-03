@@ -13,7 +13,6 @@ import os
 import logging
 import re
 import pickle
-from iris.io import save
 
 import matplotlib.pyplot as plt
 
@@ -51,7 +50,7 @@ CPM_DRIVERS = {
 PATH_TO_GLENS_CDFS = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/weighting_data/glen/'
 PATH_TO_CLIMWIP_DATA = '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/weighting_data/ClimWIP/'
 
-SEASONS_DICT = {'DJF': 0, 'MAM': 1, 'JJA': 2, 'SON': 3}
+SEASONS_DICT = {'DJF': 0, 'MAM': 1, 'JJA': 2, 'SON': 3, 'JFMAMJJA': 0, 'SOND': 1}
 
 DOMAIN_FOR_CDF = {
     'ALP-3': 'PALP',
@@ -59,6 +58,31 @@ DOMAIN_FOR_CDF = {
     'NWE-3': 'NWEU',
     'NEU-3': 'NEU'
 }
+
+
+def coloured_violin(data, pos, ax, color=None):
+    vparts = ax.violinplot(data, [pos], showmedians=True, quantiles=[0.1, 0.9])
+
+    if color:
+        for part in ['bodies', 'cbars', 'cmins', 'cmaxes']:
+            if part == 'bodies':
+                for c in vparts[part]:
+                    c.set_color(color)
+            else:
+                vparts[part].set_color(color)
+
+
+def boxplot(data, pos, ax, color=None):
+    # plot colooured box plot of data
+    box_parts = ax.boxplot(data, whis=(10, 90), positions=[pos], showmeans=True)
+
+    if color:
+        for parts in box_parts:
+            for part in box_parts[parts]:
+                part.set_color(color)
+
+
+PLOT_FN = boxplot
 
 
 def get_glens_cdf(domain, season, var):
@@ -76,12 +100,10 @@ def get_glens_cdf(domain, season, var):
     return cube.data
 
 
-def get_ClimWIP_percentiles(domain, season, var):
+def get_ClimWIP_percentiles(domain, season, var, mip):
     # construct path to files
-    weighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_weighted_CMIP5_{domain}_1980-2014_2031-2060.nc'
-    unweighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_unweighted_CMIP5_{domain}_1980-2014_2031-2060.nc'
-    # weighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_weighted_CMIP5_2_{domain}_1996-2005_2041-2050.nc'
-    # unweighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_unweighted_CMIP5_2_{domain}_1996-2005_2041-2050.nc'
+    weighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_weighted_{mip}_{domain}_1996-2005_2041-2050.nc'
+    unweighted_file = f'{PATH_TO_CLIMWIP_DATA}{var}_unweighted_{mip}_{domain}_1996-2005_2041-2050.nc'
 
     # load data
     try:
@@ -119,9 +141,12 @@ def process_projections_dict(proj_dict, season):
     return out_data
 
 
-def proj_dict_to_season_dict(proj_dict):
+def proj_dict_to_season_dict(proj_dict, n_seasons):
     # take a dictionary of data keyed by project, and reorganise to key by season
-    seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "SON"}
+    if n_seasons == 4:
+        seasons = {0: "DJF", 1: "MAM", 2: "JJA", 3: "SON"}
+    else:
+        seasons = {0: "JFMAMJJA", 1: "SOND"}
 
     season_dict = {}
     # output dict will be keyed by season, then project, then model
@@ -272,25 +297,26 @@ def simpler_scatter(drive_data, downscale_data, labels, suffix=""):
     plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
-    ax_violins = plt.subplot2grid((1, 3), (0, 0))
-    ax_scatter = plt.subplot2grid((1, 3), (0, 1), colspan=2, sharey=ax_violins)
+    ax_datasets = plt.subplot2grid((1, 3), (0, 0))
+    ax_scatter = plt.subplot2grid((1, 3), (0, 1), colspan=2, sharey=ax_datasets)
 
     # make scatter
     labelled_scatter(drive_data, downscale_data, labels, ax_scatter)
     ax_scatter.set_xlabel('GCM')
     ax_scatter.set_ylabel('RCM')
 
-    # make violins
-    coloured_violin(drive_data, 1, ax_violins, 'lightgrey')
-    coloured_violin(downscale_data, 2, ax_violins, 'lightgrey')
+    # make boxes / violins
+    PLOT_FN(drive_data, 1, ax_datasets, 'lightgrey')
+    PLOT_FN(downscale_data, 2, ax_datasets, 'lightgrey')
 
     # set x labels
-    ax_violins.set_xticks(range(1, 3))
-    ax_violins.set_xticklabels(['Global', 'Regional'])
+    ax_datasets.set_xticks(range(1, 3))
+    ax_datasets.set_xticklabels(['Global', 'Regional'])
 
     # also plot individual dots for each model..
-    plot_points(drive_data, 1, ax_violins, color='r')
-    plot_points(downscale_data, 2, ax_violins, color='r')
+    if PLOT_FN == coloured_violin:
+        plot_points(drive_data, 1, ax_datasets, color='r')
+        plot_points(downscale_data, 2, ax_datasets, color='r')
 
     var = get_var(cfg)
     plt.suptitle(f"{suffix} {var} change")
@@ -307,8 +333,8 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     RCM_sc1: RCMs for first scatter
     RCM_sc2: RCMs for second scatter
     CPM: CPMs
-    all_GCM: all GCMs for the violin
-    all_RCM: all RCMs for a violin
+    all_GCM: all GCMs for the violin / box
+    all_RCM: all RCMs for a violin / box
     labels1: Legend labels for scatter1
     labels2: Legend labels for scatter2
     suffix: suffix to end to filename
@@ -316,7 +342,7 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
-    ax_violins = plt.subplot(211)
+    ax_datasets = plt.subplot(211)
     ax_scatter1 = plt.subplot(223)
     ax_scatter2 = plt.subplot(224)
 
@@ -337,30 +363,30 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     # legend information
     h1, l1 = ax_scatter1.get_legend_handles_labels()
     h2, l2 = ax_scatter2.get_legend_handles_labels()
-    ax_violins.legend(
+    ax_datasets.legend(
         h1 + h2, l1 + l2, bbox_to_anchor=(1.05, 1.0), loc='upper left', fontsize=10)
 
-    # create GCM / RCM / CPM violins / dots
+    # create GCM / RCM / CPM violins or boxes / dots
     # GCMs go in position 1, RCMs position 2, CPMs position 3
-    coloured_violin(all_GCM, 1, ax_violins, 'lightgrey')
-    coloured_violin(all_RCM, 2, ax_violins, 'lightgrey')
-    coloured_violin(CPM, 3, ax_violins, 'lightgrey')
+    PLOT_FN(all_GCM, 1, ax_datasets, 'lightgrey')
+    PLOT_FN(all_RCM, 2, ax_datasets, 'lightgrey')
+    PLOT_FN(CPM, 3, ax_datasets, 'lightgrey')
     
     # set x labels
-    ax_violins.set_xticks(range(1, 4))
-    ax_violins.set_xticklabels(['CMIP5', 'CORDEX', 'CPM'])
+    ax_datasets.set_xticks(range(1, 4))
+    ax_datasets.set_xticklabels(['CMIP5', 'CORDEX', 'CPM'])
 
     # also plot individual dots for each model..
-    plot_points(all_GCM, 0.8, ax_violins)
-    plot_points(GCM_sc, 1.3, ax_violins, color='r')
-    plot_points(RCM_sc1, 1.8, ax_violins, color='r')
-    plot_points(RCM_sc2, 2.3, ax_violins, color='b')
-    plot_points(CPM, 3, ax_violins, color='b')
+    plot_points(all_GCM, 0.8, ax_datasets)
+    plot_points(GCM_sc, 1.3, ax_datasets, color='r')
+    plot_points(RCM_sc1, 1.8, ax_datasets, color='r')
+    plot_points(RCM_sc2, 2.3, ax_datasets, color='b')
+    plot_points(CPM, 3, ax_datasets, color='b')
 
-    max_violin = max(max(all_GCM), max(RCM_sc1), max(CPM))
-    min_violin = min(min(all_GCM), min(RCM_sc1), min(CPM))
-    if min_violin < 0 < max_violin:
-        ax_violins.axhline(ls=':', color='k', alpha=0.75)
+    max_ds = max(max(all_GCM), max(RCM_sc1), max(CPM))
+    min_ds = min(min(all_GCM), min(RCM_sc1), min(CPM))
+    if min_ds < 0 < max_ds:
+        ax_datasets.axhline(ls=':', color='k', alpha=0.75)
 
     var = get_var(cfg)
     plt.suptitle(f"{suffix} {var} change")
@@ -370,16 +396,16 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     plt.close()
 
 
-def all_violins(datasets, labels, season):
+def plot_datasets(datasets, labels, season):
     ''' 
-    Plot violins and dots of the datasets
+    Plot distributions and dots of the datasets
     datasets: list of datasets
     labels: list of labels
     '''
     # plot all of our data, plus Glen's method
     var = get_var(cfg)
 
-    # if dataset has more than 10 points plot violin, otherwise don't
+    # if dataset has more than 10 points plot violin / box, otherwise don't
     # always plot individual points
     plt.figure(figsize=(19.2, 14.4))
 
@@ -387,24 +413,33 @@ def all_violins(datasets, labels, season):
 
     for i, data in enumerate(datasets):
         if len(data) > 10:
-            coloured_violin(data, i+1, ax)
-        plot_points(data, i+1, ax)
+            PLOT_FN(data, i+1, ax)
+
+        if PLOT_FN == coloured_violin or len(data) <= 10:
+            plot_points(data, i+1, ax)
 
     # now add on glen's data (if it exists)
     glens_data = get_glens_cdf(DOMAIN_FOR_CDF[cfg["reg_name"]["name"]], season, var)
     if glens_data is not None:
         i = i + 1
         labels.append("Glen's pdf")
-        coloured_violin(glens_data, i+1, ax)
+        PLOT_FN(glens_data, i+1, ax)
 
-    # add ClimWIP data if we have it
-    climWIP_weighted, climWIP_unweighted = get_ClimWIP_percentiles(cfg["reg_name"]["name"], season, var)
+    # add CMIP5 ClimWIP data if we have it
+    climWIP_weighted, climWIP_unweighted = get_ClimWIP_percentiles(cfg["reg_name"]["name"], season, var, "CMIP5")
     if climWIP_weighted is not None:
         i = i + 1
         labels.append('CMIP5 ClimWIP w|u')
-        coloured_violin(climWIP_weighted, i+0.75, ax)
-        coloured_violin(climWIP_unweighted, i+1.25, ax)
+        PLOT_FN(climWIP_weighted, i+0.75, ax)
+        PLOT_FN(climWIP_unweighted, i+1.25, ax)
 
+    # add CMIP6 data if we have it
+    climWIP_weighted, climWIP_unweighted = get_ClimWIP_percentiles(cfg["reg_name"]["name"], season, var, "CMIP6")
+    if climWIP_weighted is not None:
+        i = i + 1
+        labels.append('CMIP6 ClimWIP w|u')
+        PLOT_FN(climWIP_weighted, i+0.75, ax)
+        PLOT_FN(climWIP_unweighted, i+1.25, ax)
 
     # set x labels
     plt.xticks(range(1, i+2), labels, rotation=45, ha="right")
@@ -416,25 +451,13 @@ def all_violins(datasets, labels, season):
 
     plt.suptitle(f"{season} {var} change")
 
-    plt.savefig(f"{cfg['plot_dir']}/all_violins_{season}.png", bbox_inches='tight')
+    plt.savefig(f"{cfg['plot_dir']}/all_datasets_{season}.png", bbox_inches='tight')
     plt.close()
 
 
 def plot_points(points, x, ax, color='k'):
     for p in points:
         ax.plot(x, p, marker="o", fillstyle="none", color=color)
-
-
-def coloured_violin(data, pos, ax, color=None):
-    vparts = ax.violinplot(data, [pos], showmedians=True, quantiles=[0.05, 0.95])
-
-    if color:
-        for part in ['bodies', 'cbars', 'cmins', 'cmaxes']:
-            if part == 'bodies':
-                for c in vparts[part]:
-                    c.set_color(color)
-            else:
-                vparts[part].set_color(color)
 
 
 def remove_institute_from_driver(driver_str):
@@ -561,7 +584,8 @@ def main(cfg):
     cordex_rcms = set(cordex_rcms)
 
     # reorganise and extract data for plotting
-    plotting_dict = proj_dict_to_season_dict(projections)
+    n_seasons = len(anoms.coord('season_number').points)
+    plotting_dict = proj_dict_to_season_dict(projections, n_seasons)
 
     for season in plotting_dict.keys():
         # this section of the code does all the plotting..
@@ -578,20 +602,30 @@ def main(cfg):
         )
 
         # simpler scatter for UKCP
-        UKCP_g, UKCP_r, UKCP_labels = prepare_scatter_data(
-            plotting_dict[season]['UKCP18 land-gcm'], plotting_dict[season]['UKCP18 land-rcm'], "UKCP18")
-        simpler_scatter(UKCP_g, UKCP_r, UKCP_labels, f'UKCP_{season}')
+        if 'UKCP18 land-gcm' in plotting_dict[season].keys():
+            UKCP_g, UKCP_r, UKCP_labels = prepare_scatter_data(
+                plotting_dict[season]['UKCP18 land-gcm'], plotting_dict[season]['UKCP18 land-rcm'], "UKCP18")
+            simpler_scatter(UKCP_g, UKCP_r, UKCP_labels, f'UKCP_{season}')
 
-        # side by side violins / dots for all models plus Glen's method...
-        data_for_violins = [
-            plotting_dict[season]['CMIP6'].values(),
-            plotting_dict[season]['CMIP5'].values(),
-            rcm_sc1, cpm_sc, UKCP_g, UKCP_r
-            ]
-        labels_for_violins = [
-            'CMIP6', 'CMIP5', 'CORDEX', 'CPM', 'UKCP_g', 'UKCP_r'
-            ]
-        all_violins(data_for_violins, labels_for_violins, season)
+        # side by side plots / dots for all models plus Glen's method...
+        if 'CMIP6' in plotting_dict[season].keys():
+            data_for_plotting = [
+                plotting_dict[season]['CMIP6'].values(),
+                plotting_dict[season]['CMIP5'].values(),
+                rcm_sc1, cpm_sc, UKCP_g, UKCP_r
+                ]
+            labels_for_plotting = [
+                'CMIP6', 'CMIP5', 'CORDEX', 'CPM', 'UKCP_g', 'UKCP_r'
+                ]
+        else:
+            data_for_plotting = [
+                plotting_dict[season]['CMIP5'].values(),
+                rcm_sc1, cpm_sc
+                ]
+            labels_for_plotting = [
+                'CMIP5', 'CORDEX', 'CPM',
+                ]
+        plot_datasets(data_for_plotting, labels_for_plotting, season)
 
         # save some plotting data for notebook experiments
         # create dictionary of all the required data for one particular season
@@ -609,12 +643,12 @@ def main(cfg):
             pickle_dict['UKCP18 land-gcm'] = plotting_dict[season]['UKCP18 land-gcm']
             pickle_dict['UKCP18 land-rcm'] = plotting_dict[season]['UKCP18 land-rcm']
 
-            # save details of values used for plotting the boxplots
-            save_anoms_txt(plotting_dict[season]['CMIP5'], f'{cfg["work_dir"]}/CMIP5_{season}.txt')
-            save_anoms_txt(plotting_dict[season]['CORDEX'], f'{cfg["work_dir"]}/CORDEX_{season}.txt')
-            save_anoms_txt(plotting_dict[season]['cordex-cpm'], f'{cfg["work_dir"]}/CPM_{season}.txt')
-
             pickle.dump(pickle_dict, open(f'{cfg["work_dir"]}/sample_plotting_data.pkl', 'wb'))
+
+        # save details of values used for plotting the boxplots
+        save_anoms_txt(plotting_dict[season]['CMIP5'], f'{cfg["work_dir"]}/CMIP5_{season}.txt')
+        save_anoms_txt(plotting_dict[season]['CORDEX'], f'{cfg["work_dir"]}/CORDEX_{season}.txt')
+        save_anoms_txt(plotting_dict[season]['cordex-cpm'], f'{cfg["work_dir"]}/CPM_{season}.txt')
 
     # print all datasets used
     print("Input models for plots:")
