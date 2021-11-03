@@ -139,16 +139,19 @@ dataset_groups:
   # Non standard CORDEX
   # Special non CORDEX RCMs used to drive CPMs
   # REU-25 RCM run
-  CORDEX-REU25: &CORDEX-REU25
-  - {project: non-cordex-rcm, ensemble: r1i1p1, dataset: MOHC-HadGEM3-GC3.1-N512, driver: MOHC-HadGEM2-ES, mip: mon, domain: REU-25, rcm_version: v1}
+  # not needed as not using REU-2 CPM
+  # - {project: non-cordex-rcm, ensemble: r1i1p1, dataset: MOHC-HadGEM3-GC3.1-N512, driver: MOHC-HadGEM2-ES, mip: mon, domain: REU-25, rcm_version: v1}
   # END non standard CORDEX
   ##########################################################################
 
   CORDEX-cpm: &CORDEX-CPM
   - {project: cordex-cpm, ensemble: r1i1p1, dataset: GERICS-REMO2015, driver: MPI-M-MPI-ESM-LR, mip: mon, domain: NEU-3, rcm_version: v1}
+  # There is also an SMHI HCCLIM38-AROME run, but it is missing tas data
 
-  CORDEX-cpm_2: &CORDEX-CPM2
-  - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
+  # Pan EU CPM
+  # can't use this as it doesn't go dfar enough north
+  # CORDEX-cpm_2: &CORDEX-CPM2
+  # - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
 
   # ####################
   # UKCP
@@ -237,10 +240,10 @@ dataset_groups:
 
 regions:
   NEU-3: &NEU-3
-    start_longitude: 11
-    end_longitude: 34
-    start_latitude: 1
-    end_latitude: 26
+    start_longitude: 3
+    end_longitude: 30
+    start_latitude: 50
+    end_latitude: 70
 
   # set REGION name here
   region_name: &reg_name
@@ -396,14 +399,6 @@ diagnostics:
         <<: *box_preproc
         <<: *var_rcp85
         additional_datasets: *CORDEX-EUR11
-      box_hist_CORDEX-REU25:
-        <<: *box_preproc
-        <<: *var_hist_2
-        additional_datasets: *CORDEX-REU25
-      box_rcp85_CORDEX-REU25:
-        <<: *box_preproc
-        <<: *var_rcp85_2
-        additional_datasets: *CORDEX-REU25
       box_hist_cordex_cpm:
         <<: *box_preproc
         <<: *var_hist
@@ -412,14 +407,6 @@ diagnostics:
         <<: *box_preproc
         <<: *var_rcp85
         additional_datasets: *CORDEX-CPM
-      box_hist_cordex_cpm2:
-        <<: *box_preproc
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM2
-      box_rcp85_cordex_cpm2:
-        <<: *box_preproc
-        <<: *var_rcp85_2
-        additional_datasets: *CORDEX-CPM2
       box_hist_UKCP-GCM:
         <<: *box_preproc
         <<: *var_hist
@@ -468,14 +455,6 @@ diagnostics:
         <<: *var_rcp85
         additional_datasets: *CORDEX-EUR11
         preprocessor: season_spatial_proc_RCM
-      map_hist_CORDEX-REU25:
-        <<: *var_hist_2
-        additional_datasets: *CORDEX-REU25
-        preprocessor: season_spatial_proc_RCM
-      map_rcp85_CORDEX-REU25:
-        <<: *var_rcp85_2
-        additional_datasets: *CORDEX-REU25
-        preprocessor: season_spatial_proc_RCM
       map_hist_cordex_cpm:
         <<: *var_hist
         additional_datasets: *CORDEX-CPM
@@ -483,14 +462,6 @@ diagnostics:
       map_rcp85_cordex_cpm:
         <<: *var_rcp85
         additional_datasets: *CORDEX-CPM
-        preprocessor: season_spatial_proc_CPM
-      map_hist_cordex_cpm2:
-        <<: *var_hist
-        additional_datasets: *CORDEX-CPM2
-        preprocessor: season_spatial_proc_CPM
-      map_rcp85_cordex_cpm2:
-        <<: *var_rcp85_2
-        additional_datasets: *CORDEX-CPM2
         preprocessor: season_spatial_proc_CPM
       map_hist_UKCP-GCM:
         <<: *var_hist

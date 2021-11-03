@@ -339,7 +339,7 @@ preprocessors:
 base_vars:
   var: &var
     # CHANGE VARIABLE HERE
-    short_name: tas
+    short_name: pr
 
   vars:
     var_hist: &var_hist

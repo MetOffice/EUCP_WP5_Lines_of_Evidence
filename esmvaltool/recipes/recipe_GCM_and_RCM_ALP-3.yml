@@ -157,6 +157,10 @@ dataset_groups:
   CORDEX-EUR11_3: &CORDEX-EUR11_3
   - {project: non-cordex-rcm, dataset: KNMI-RACMO23E, driver: KNMI-EC-EARTH, mip: mon, domain: EUR-11, rcm_version: v1}
   
+  # slightly different hist and future time slices
+  CORDEX-REU25: &CORDEX-REU25
+  - {project: non-cordex-rcm, ensemble: r1i1p1, dataset: MOHC-HadGEM3-GC3.1-N512, driver: MOHC-HadGEM2-ES, mip: mon, domain: REU-25, rcm_version: v1}
+  
   # END non standard CORDEX
   ##########################################################################
 
@@ -182,6 +186,10 @@ dataset_groups:
   # (historical ensemble 14, future ensemble 13)
   CORDEX-cpm3: &CORDEX-CPM3
   - {project: cordex-cpm, dataset: KNMI-HCLIM38h1-AROME, driver: KNMI-EC-EARTH, mip: mon, domain: ALP-3, rcm_version: fpsconv-x2yn2-v1} # Driver RACMO23E - EC-EARTH (non standard)
+  # slightly different hist and future time slices
+  CORDEX-cpm4: &CORDEX-CPM4
+  - {dataset: HadREM3-RA-UM10.1, driver: HadGEM3-GC3.1-N512, project: cordex-cpm, ensemble: r1i1p1, domain: REU-2, mip: mon, rcm_version: fpsconv-x0n1-v1}
+
   
   # ####################
   # UKCP
@@ -324,11 +332,15 @@ regions:
 
   # And set keys here
   region: &region
-    <<: *arpa_reg
+    <<: *alpine
 
 hist_time: &hist_time
   start_year: 1996
   end_year: 2005
+
+hist_time_2: &hist_time_2
+  start_year: 1998
+  end_year: 2007
 
 fut_time: &fut_time
   start_year: 2041
@@ -423,6 +435,11 @@ base_vars:
       <<: *hist_time
       exp: [historical, rcp85]
 
+    var_hist_2: &var_hist_2
+      <<: *var
+      <<: *hist_time_2
+      exp: [historical, rcp85]
+
     var_rcp85: &var_rcp85
       <<: *var
       <<: *fut_time
@@ -491,6 +508,14 @@ diagnostics:
         <<: *var_rcp85
         ensemble: r13i1p1
         additional_datasets: *CORDEX-EUR11_3
+      box_hist_CORDEX-REU25:
+        <<: *box_preproc
+        <<: *var_hist_2
+        additional_datasets: *CORDEX-REU25
+      box_rcp85_CORDEX-REU25:
+        <<: *box_preproc
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-REU25
       box_hist_cordex_cpm:
         <<: *box_preproc
         <<: *var_hist
@@ -517,6 +542,14 @@ diagnostics:
         <<: *var_rcp85
         ensemble: r13i1p1
         additional_datasets: *CORDEX-CPM3
+      box_hist_cordex_cpm4:
+        <<: *box_preproc
+        <<: *var_hist_2
+        additional_datasets: *CORDEX-CPM4
+      box_rcp85_cordex_cpm4:
+        <<: *box_preproc
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-CPM4
       box_hist_UKCP-GCM:
         <<: *box_preproc
         <<: *var_hist
@@ -583,6 +616,14 @@ diagnostics:
         <<: *var_rcp85_2
         additional_datasets: *CORDEX-EUR11_2
         preprocessor: season_spatial_proc_RCM
+      map_hist_CORDEX-REU25:
+        <<: *var_hist_2
+        additional_datasets: *CORDEX-REU25
+        preprocessor: season_spatial_proc_RCM
+      map_rcp85_CORDEX-REU25:
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-REU25
+        preprocessor: season_spatial_proc_RCM
       map_hist_cordex_cpm:
         <<: *var_hist
         additional_datasets: *CORDEX-CPM
@@ -608,6 +649,14 @@ diagnostics:
         <<: *var_rcp85
         ensemble: r13i1p1
         additional_datasets: *CORDEX-CPM3
+        preprocessor: season_spatial_proc_CPM
+      map_hist_cordex_cpm4:
+        <<: *var_hist_2
+        additional_datasets: *CORDEX-CPM4
+        preprocessor: season_spatial_proc_CPM
+      map_rcp85_cordex_cpm4:
+        <<: *var_rcp85_2
+        additional_datasets: *CORDEX-CPM4
         preprocessor: season_spatial_proc_CPM
       map_hist_UKCP-GCM:
         <<: *var_hist
