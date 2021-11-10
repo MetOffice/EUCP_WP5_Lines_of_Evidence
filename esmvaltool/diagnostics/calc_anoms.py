@@ -101,11 +101,11 @@ def main(cfg):
                 # now loop over these and get anomalies
                 for d in drivers:
                     if len(drivers[d]) != 2:
-                        logger.warning(f'Expect exactly 2 data sources for {p}_{m}_{d} found {len(drivers[d])}')
+                        logger.warning(f'Expect exactly 2 data sources for {p}_{m} {d} found {len(drivers[d])}')
                         continue
                     anom = get_anomalies(drivers[d], rel_change)
                     iris.save(
-                        anom, get_diagnostic_filename(f"{p}_{m}_{d}_anom", cfg)
+                        anom, get_diagnostic_filename(f"{p}_{m} {d}_anom", cfg)
                     )
             else:
                 if len(datasets[m]) != 2:
