@@ -144,13 +144,11 @@ dataset_groups:
   ##########################################################################
   # Non standard CORDEX
   # Special non CORDEX RCMs used to drive CPMs
-  # For ALP-12 domain
-  - {project: non-cordex-rcm, ensemble: r12i1p1, dataset: HCLIMcom-HCLIM38-ALADIN, driver: ICHEC-EC-EARTH, mip: mon, domain: ALP-12, rcm_version: v1}
-  
   # Still to add, ETH special RCM that drives Cosmo Pompa
 
   # Model has slightly different future period.
   CORDEX-EUR11_2: &CORDEX-EUR11_2
+  - {project: non-cordex-rcm, ensemble: r12i1p1, dataset: HCLIMcom-HCLIM38-ALADIN, driver: ICHEC-EC-EARTH, mip: mon, domain: ALP-12, rcm_version: v1}
   - {project: non-cordex-rcm, ensemble: r1i1p1, dataset: ICTP-RegCM4-7-0, driver: MOHC-HadGEM2-ES, mip: mon, domain: EUR-11, rcm_version: v0}
   
   # Model uses different ensemble for past and future
@@ -277,78 +275,41 @@ dataset_groups:
   # - {dataset: MCM-UA-1-0, project: CMIP6, ensemble: r1i1p1f2, grid: gn, mip: Amon} (ValueError: coordinate's range greater than coordinate's unit's modulus)
 
 regions:
-  alpine: &alpine
-    # "common area" domain from Pichelli 2021 paper
-    start_longitude: 1
-    end_longitude: 17
+  # wider region for initial regridding
+  region: &region
+    start_longitude: 0
+    end_longitude: 17.5
     start_latitude: 40
     end_latitude: 50
-
-  alpine_NW: &alpine_NW
-    start_longitude: 1
-    end_longitude: 9
-    start_latitude: 46
-    end_latitude: 50
-
-  alpine_NE: &alpine_NE
-    start_longitude: 10
-    end_longitude: 17
-    start_latitude: 46
-    end_latitude: 50
-
-  alpine_SW: &alpine_SW
-    start_longitude: 1
-    end_longitude: 9
-    start_latitude: 40
-    end_latitude: 45
-
-  alpine_SE: &alpine_SE
-    start_longitude: 10
-    end_longitude: 17
-    start_latitude: 40
-    end_latitude: 45
-
-  southern_FR: &s_FR
-    start_longitude: 2
-    end_longitude: 7
-    start_latitude: 43
-    end_latitude: 48
-
-  southern_DE: &s_DE
-    start_longitude: 6.5
-    end_longitude: 14
-    start_latitude: 47.5
-    end_latitude: 50
-
-  ARPA_reg: &arpa_reg
-    start_longitude: 10
-    end_longitude: 15
-    start_latitude: 43
-    end_latitude: 48
 
   # set REGION name here
   region_name: &reg_name
     name: ALP-3
 
-  # And set keys here
-  region: &region
-    <<: *alpine
-
-hist_time: &hist_time
+# time periods
+hist_cpm: &hist_cpm
   start_year: 1996
   end_year: 2005
 
-hist_time_2: &hist_time_2
+hist_time_2: &hist_cpm_2
   start_year: 1998
   end_year: 2007
 
-fut_time: &fut_time
+hist_time: &hist_time
+  start_year: 1995
+  end_year: 2014
+
+fut_cpm: &fut_cpm
   start_year: 2041
   end_year: 2050
 
-fut_time_2: &fut_time2
+fut_cpm_2: &fut_cpm_2
   start_year: 2040
   end_year: 2049
+
+fut_time: &fut_time
+  start_year: 2041
+  end_year: 2060
 
 preprocessors:
   regrid_GCM: &regrid_GCM
@@ -375,49 +336,54 @@ preprocessors:
         step_latitude: 0.0275
       scheme: linear
 
+  extract_domain: &extract_domain
+    extract_shape:
+      shapefile: /home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp
+      decomposed: True
+      method: contains
+      crop: true
+      ids:
+        - 'ALP-3'
+
   season_spatial_proc_GCM:
     custom_order: true
-    extract_region:
-      <<: *region
+    <<: *regrid_GCM
+    <<: *extract_domain
     climate_statistics:
       operator: mean
       period: season
-    <<: *regrid_GCM
     mask_landsea:
       mask_out: sea
     
   season_spatial_proc_RCM:
     custom_order: true
-    extract_region:
-      <<: *region
+    <<: *regrid_RCM
+    <<: *extract_domain
     climate_statistics:
       operator: mean
       period: season
-    <<: *regrid_RCM
     mask_landsea:
       mask_out: sea
 
   season_spatial_proc_CPM:
     custom_order: true
-    extract_region:
-      <<: *region
+    <<: *regrid_CPM
+    <<: *extract_domain
     climate_statistics:
       operator: mean
       period: season
-    <<: *regrid_CPM
     mask_landsea:
       mask_out: sea
-
+    
   season_area_mean_proc:
     custom_order: true
-    extract_region:
-      <<: *region
+    <<: *regrid_GCM
+    <<: *extract_domain
     climate_statistics:
       operator: mean
       period: season
     # the regrid is necessary because of awkward grids with some of the RCM data
     # which will prevent calculating area statistics.
-    <<: *regrid_GCM
     mask_landsea:
       mask_out: sea
     area_statistics:
@@ -435,9 +401,14 @@ base_vars:
       <<: *hist_time
       exp: [historical, rcp85]
 
-    var_hist_2: &var_hist_2
+    var_hist_cmp: &var_hist_cpm
       <<: *var
-      <<: *hist_time_2
+      <<: *hist_cpm
+      exp: [historical, rcp85]
+
+    var_hist_cmp_2: &var_hist_cpm_2
+      <<: *var
+      <<: *hist_cpm_2
       exp: [historical, rcp85]
 
     var_rcp85: &var_rcp85
@@ -445,9 +416,14 @@ base_vars:
       <<: *fut_time
       exp: rcp85
 
-    var_rcp85_2: &var_rcp85_2
+    var_rcp85_cpm: &var_rcp85_cpm
       <<: *var
-      <<: *fut_time2
+      <<: *fut_cpm
+      exp: rcp85
+
+    var_rcp85_cpm_2: &var_rcp85_cpm_2
+      <<: *var
+      <<: *fut_cpm_2
       exp: rcp85
 
     var_hist_CMIP6: &var_hist_CMIP6
@@ -460,6 +436,7 @@ base_vars:
       <<: *var
       <<: *fut_time
       exp: ssp585
+
 
 diagnostics:
   boxplots:
@@ -474,12 +451,12 @@ diagnostics:
         <<: *var_rcp85
       box_hist_non-cmip5:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         ensemble: r14i1p1
         additional_datasets: *non-cmip5
       box_rcp85_non-cmip5:
         <<: *box_preproc
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         ensemble: r13i1p1
         additional_datasets: *non-cmip5
       box_hist_CORDEX-EUR11:
@@ -492,63 +469,63 @@ diagnostics:
         additional_datasets: *CORDEX-EUR11
       box_hist_CORDEX-EUR11_2:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-EUR11_2
       box_rcp85_CORDEX-EUR11_2:
         <<: *box_preproc
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-EUR11_2
       box_hist_CORDEX-EUR11_3:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         ensemble: r14i1p1
         additional_datasets: *CORDEX-EUR11_3
       box_rcp85_CORDEX-EUR11_3:
         <<: *box_preproc
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         ensemble: r13i1p1
         additional_datasets: *CORDEX-EUR11_3
       box_hist_CORDEX-REU25:
         <<: *box_preproc
-        <<: *var_hist_2
+        <<: *var_hist_cpm_2
         additional_datasets: *CORDEX-REU25
       box_rcp85_CORDEX-REU25:
         <<: *box_preproc
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-REU25
       box_hist_cordex_cpm:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-CPM
       box_rcp85_cordex_cpm:
         <<: *box_preproc
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         additional_datasets: *CORDEX-CPM
       box_hist_cordex_cpm2:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-CPM2
       box_rcp85_cordex_cpm2:
         <<: *box_preproc
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-CPM2
       box_hist_cordex_cpm3:
         <<: *box_preproc
-        <<: *var_hist
+        <<: *var_hist_cpm
         ensemble: r14i1p1
         additional_datasets: *CORDEX-CPM3
       box_rcp85_cordex_cpm3:
         <<: *box_preproc
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         ensemble: r13i1p1
         additional_datasets: *CORDEX-CPM3
       box_hist_cordex_cpm4:
         <<: *box_preproc
-        <<: *var_hist_2
+        <<: *var_hist_cpm_2
         additional_datasets: *CORDEX-CPM4
       box_rcp85_cordex_cpm4:
         <<: *box_preproc
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-CPM4
       box_hist_UKCP-GCM:
         <<: *box_preproc
@@ -591,12 +568,12 @@ diagnostics:
         additional_datasets: *CMIP5
         preprocessor: season_spatial_proc_GCM
       map_hist_non-cmip5:
-        <<: *var_hist
+        <<: *var_hist_cpm
         ensemble: r14i1p1
         additional_datasets: *non-cmip5
         preprocessor: season_spatial_proc_GCM
       map_rcp85_non-cmip5:
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         ensemble: r13i1p1
         additional_datasets: *non-cmip5
         preprocessor: season_spatial_proc_GCM
@@ -609,53 +586,63 @@ diagnostics:
         additional_datasets: *CORDEX-EUR11
         preprocessor: season_spatial_proc_RCM
       map_hist_CORDEX-EUR11_2:
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-EUR11_2
         preprocessor: season_spatial_proc_RCM
       map_rcp85_CORDEX-EUR11_2:
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-EUR11_2
         preprocessor: season_spatial_proc_RCM
+      map_hist_CORDEX-EUR11_3:
+        <<: *var_hist_cpm
+        ensemble: r14i1p1
+        additional_datasets: *CORDEX-EUR11_3
+        preprocessor: season_spatial_proc_RCM
+      map_rcp85_CORDEX-EUR11_3:
+        <<: *var_rcp85_cpm
+        ensemble: r13i1p1
+        additional_datasets: *CORDEX-EUR11_3
+        preprocessor: season_spatial_proc_RCM
       map_hist_CORDEX-REU25:
-        <<: *var_hist_2
+        <<: *var_hist_cpm_2
         additional_datasets: *CORDEX-REU25
         preprocessor: season_spatial_proc_RCM
       map_rcp85_CORDEX-REU25:
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-REU25
         preprocessor: season_spatial_proc_RCM
       map_hist_cordex_cpm:
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-CPM
         preprocessor: season_spatial_proc_CPM
       map_rcp85_cordex_cpm:
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         additional_datasets: *CORDEX-CPM
         preprocessor: season_spatial_proc_CPM
       map_hist_cordex_cpm2:
-        <<: *var_hist
+        <<: *var_hist_cpm
         additional_datasets: *CORDEX-CPM2
         preprocessor: season_spatial_proc_CPM
       map_rcp85_cordex_cpm2:
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-CPM2
         preprocessor: season_spatial_proc_CPM
       map_hist_cordex_cpm3:
-        <<: *var_hist
+        <<: *var_hist_cpm
         ensemble: r14i1p1
         additional_datasets: *CORDEX-CPM3
         preprocessor: season_spatial_proc_CPM
       map_rcp85_cordex_cpm3:
-        <<: *var_rcp85
+        <<: *var_rcp85_cpm
         ensemble: r13i1p1
         additional_datasets: *CORDEX-CPM3
         preprocessor: season_spatial_proc_CPM
       map_hist_cordex_cpm4:
-        <<: *var_hist_2
+        <<: *var_hist_cpm_2
         additional_datasets: *CORDEX-CPM4
         preprocessor: season_spatial_proc_CPM
       map_rcp85_cordex_cpm4:
-        <<: *var_rcp85_2
+        <<: *var_rcp85_cpm_2
         additional_datasets: *CORDEX-CPM4
         preprocessor: season_spatial_proc_CPM
       map_hist_UKCP-GCM:
