@@ -1,0 +1,517 @@
+# ESMValTool
+# recipe_climwip_brunner2019.yml
+---
+documentation:
+  description: >
+    Calculate weights similar to Brunner et al. (2019).
+    Changes compared to Brunner et al. (2019):
+      - Use model native land-sea mask (instead of regionmask)
+      - Use ESMValCore extract_shape to cut regions (instead of regionmask)
+      - The models CCSM4 (r6) and MIROC5 (r1) had to be excluded due to errors in the ESMValCore pre-processor
+      - Use ERA5 instead of three older reanalyses as observational data set
+    This recipe is intended as a template - it calculates weights for the Mediterranean (MED) SREX
+    region. Small adaptation are needed to calculate the other regions (see documentation for guidance).
+  authors:
+    - brunner_lukas
+    - lorenz_ruth
+  maintainer:
+    - brunner_lukas
+  references:
+    - brunner2019
+  title: ClimWIP calculation for CMIP5 models used in EUCP lines of evidence study
+
+datasets: &model_data
+  - {
+      dataset: ACCESS1-0,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: ACCESS1-3,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: bcc-csm1-1-m,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: bcc-csm1-1,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: BNU-ESM,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CanESM2,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CCSM4,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CESM1-BGC,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CESM1-CAM5,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  # - {dataset: CESM1-WACCM, project: CMIP5, ensemble: r2i1p1, mip: Amon} missing pr
+  - {
+      dataset: CMCC-CM,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CMCC-CMS,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CMCC-CESM,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CNRM-CM5,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: CSIRO-Mk3-6-0,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  # - {
+  #     dataset: EC-EARTH,
+  #     project: CMIP5,
+  #     ensemble: r12i1p1,
+  #     mip: Amon,
+  #     exp: [historical, rcp85],
+  #   } No radiation data for historical
+  - {
+      dataset: FGOALS-g2,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  # - {
+  #     dataset: FIO-ESM,
+  #     project: CMIP5,
+  #     ensemble: r1i1p1,
+  #     mip: Amon,
+  #     exp: [historical, rcp85],
+  #   } No rlds data
+  - {
+      dataset: GFDL-CM3,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: GFDL-ESM2G,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  # TODO Requires dataset fix to resolve concatenation issue
+  # - {dataset: GFDL-ESM2M, project: CMIP5, ensemble: r1i1p1, mip: Amon}
+  - {
+      dataset: GISS-E2-H,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: GISS-E2-R,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: HadGEM2-CC,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: HadGEM2-ES,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: inmcm4,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: IPSL-CM5A-LR,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: IPSL-CM5A-MR,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: IPSL-CM5B-LR,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  # - {
+  #     dataset: MIROC5,
+  #     project: CMIP5,
+  #     ensemble: r1i1p1,
+  #     mip: Amon,
+  #     exp: [historical, rcp85],
+  #   } - Concatenation problem for psl
+  - {
+      dataset: MIROC-ESM,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: MIROC-ESM-CHEM,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: MPI-ESM-LR,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: MPI-ESM-MR,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: MRI-CGCM3,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: NorESM1-M,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+  - {
+      dataset: NorESM1-ME,
+      project: CMIP5,
+      ensemble: r1i1p1,
+      mip: Amon,
+      exp: [historical, rcp85],
+    }
+
+obs_data: &obs_data # for climwip performance metrics
+  - { dataset: ERA5, project: native6, type: reanaly, version: "1", tier: 3 }
+
+preprocessors:
+  climwip_general: &general
+    regrid:
+      target_grid: 2.5x2.5
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+
+  climatological_mean: &mean
+    <<: *general
+    climate_statistics:
+      operator: mean
+
+  climatological_std: &std
+    <<: *general
+    climate_statistics:
+      operator: std_dev
+
+  region: &region
+    # extract_region:
+    #   # Romania
+    #   start_longitude: 20
+    #   end_longitude: 30
+    #   start_latitude: 43.5
+    #   end_latitude: 48.5
+
+    # Romania
+    # extract_shape:
+    #   shapefile: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shapefiles/ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp
+    #   decomposed: True
+    #   method: contains
+    #   crop: true
+    #   ids:
+    #     - 'Romania'
+    
+    extract_shape:
+      shapefile: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shapefiles/EUCP_WP3_domains/EUCP_WP3_domains.shp
+      decomposed: True
+      method: contains
+      crop: true
+      ids:
+        - 'CEE-3'
+
+  region_mean:
+    <<: *region
+    <<: *mean
+
+  region_std:
+    <<: *region
+    <<: *std
+
+  temperature_anomalies:
+    custom_order: true
+    <<: *general
+    <<: *region
+    area_statistics:
+      operator: mean
+    annual_statistics:
+      operator: mean
+    anomalies:
+      period: full
+      reference: &ref_period
+        start_year: 1995
+        start_month: 1
+        start_day: 1
+        end_year: 2014
+        end_month: 12
+        end_day: 31
+      standardize: false
+
+  area_season_mean:
+    <<: *general
+    <<: *region
+    area_statistics:
+      operator: mean
+    climate_statistics:
+      period: season
+      operator: mean
+
+diagnostics:
+  calculate_weights_climwip:
+    variables:
+      tas_CLIM_i: &independence_settings
+        short_name: tas
+        start_year: 1995
+        end_year: 2014
+        mip: Amon
+        preprocessor: climatological_mean
+        additional_datasets: *obs_data
+      psl_CLIM_i:
+        <<: *independence_settings
+        short_name: psl
+      tas_CLIM: &common_settings
+        short_name: tas
+        start_year: 1995
+        end_year: 2014
+        mip: Amon
+        preprocessor: region_mean
+        additional_datasets: *obs_data
+      pr_CLIM:
+        <<: *common_settings
+        short_name: pr
+      rsds_CLIM:
+        <<: *common_settings
+        short_name: rsds
+      rlds_STD:
+        <<: *common_settings
+        short_name: rlds
+        preprocessor: region_std
+      rsus_CLIM:
+        <<: *common_settings
+        short_name: rsus
+        derive: true
+        force_derivation: false
+      rsus_STD:
+        <<: *common_settings
+        short_name: rsus
+        preprocessor: region_std
+        derive: true
+        force_derivation: false
+      # only needed if no performance sigma is given
+      CLIM_future:
+        short_name: tas
+        start_year: 2041
+        end_year: 2060
+        mip: Amon
+        preprocessor: region_mean
+
+    scripts:
+      climwip:
+        script: weighting/climwip/main.py
+        obs_data: native6
+        combine_ensemble_members: false
+        # performance_sigma: 0.546 # <-----
+        independence_sigma: 0.54 #0.643 # <-----
+        performance_contributions:
+          tas_CLIM: 1
+          pr_CLIM: 1
+          rsds_CLIM: 1
+          rsus_CLIM: 1
+          rlds_STD: 1
+          rsus_STD: 1
+        independence_contributions:
+          tas_CLIM_i: 1
+          psl_CLIM_i: 1
+        # only needed if no performance sigma is given
+        calibrate_performance_sigma:
+          target: CLIM_future
+
+  weighted_temperature_graph:
+    variables:
+      tas:
+        start_year: 1960
+        end_year: 2100
+        mip: Amon
+        preprocessor: temperature_anomalies
+    scripts:
+      weighted_temperature_graph:
+        script: weighting/weighted_temperature_graph.py
+        ancestors: [calculate_weights_climwip/climwip, tas]
+        weights: "weights.nc"
+        settings:
+          <<: *ref_period
+          central_estimate: mean
+          lower_bound: 16.7
+          upper_bound: 83.3
+
+  weighted_temperature_map:
+    variables:
+      tas_CLIM_future:
+        short_name: tas
+        start_year: 2041
+        end_year: 2060
+        mip: Amon
+        preprocessor: region_mean
+      tas_CLIM_reference:
+        short_name: tas
+        start_year: 1995
+        end_year: 2014
+        mip: Amon
+        preprocessor: region_mean
+    scripts:
+      weighted_temperature_map:
+        script: weighting/weighted_temperature_map.py
+        ancestors:
+          [
+            calculate_weights_climwip/climwip,
+            tas_CLIM_future,
+            tas_CLIM_reference,
+          ]
+        weights: "weights.nc"
+        # optional arguments
+        antimeridian: pacific
+        model_aggregation: mean # [ mean (default) | median | integer in (0, 100) ]
+
+  temperature_pdf:
+    variables:
+      tas_CLIM_future:
+        short_name: tas
+        start_year: 2041
+        end_year: 2060
+        mip: Amon
+        preprocessor: area_season_mean
+      tas_CLIM_reference:
+        short_name: tas
+        start_year: 1995
+        end_year: 2014
+        mip: Amon
+        preprocessor: area_season_mean
+    scripts:
+      weighted_temperature_pdf:
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/ClimWIP_pdfs.py
+        ancestors:
+          [
+            calculate_weights_climwip/climwip,
+            tas_CLIM_future,
+            tas_CLIM_reference,
+          ]
+        weights: "weights.nc"
+        var: tas
+
+  precipitation_pdf:
+    variables:
+      pr_CLIM_future:
+        short_name: pr
+        start_year: 2041
+        end_year: 2060
+        mip: Amon
+        preprocessor: area_season_mean
+      pr_CLIM_reference:
+        short_name: pr
+        start_year: 1995
+        end_year: 2014
+        mip: Amon
+        preprocessor: area_season_mean
+    scripts:
+      weighted_precipitation_pdf:
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/ClimWIP_pdfs.py
+        ancestors:
+          [calculate_weights_climwip/climwip, pr_CLIM_future, pr_CLIM_reference]
+        weights: "weights.nc"
+        var: pr

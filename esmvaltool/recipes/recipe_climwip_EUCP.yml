@@ -32,7 +32,6 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: bcc-csm1-1-m,
       project: CMIP5,
@@ -45,14 +44,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: BNU-ESM,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: CCSM4,
       project: CMIP5,
@@ -85,14 +82,12 @@ datasets: &model_data
     }
   # pre-processor can't merge historical and RCP85 - unclear why
   # - {dataset: CCSM4, project: CMIP5, exp: [historical, rcp85], ensemble: r6i1p1}
-
   - {
       dataset: CESM1-BGC,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: CESM1-CAM5,
       project: CMIP5,
@@ -111,28 +106,24 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r3i1p1,
     }
-
   - {
       dataset: CMCC-CESM,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: CMCC-CMS,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: CMCC-CM,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: CNRM-CM5,
       project: CMIP5,
@@ -163,7 +154,6 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r10i1p1,
     }
-
   - {
       dataset: CSIRO-Mk3-6-0,
       project: CMIP5,
@@ -224,7 +214,6 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r10i1p1,
     }
-
   - {
       dataset: CanESM2,
       project: CMIP5,
@@ -255,42 +244,36 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r5i1p1,
     }
-
   - {
       dataset: FGOALS-g2,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GFDL-CM3,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GFDL-ESM2G,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GFDL-ESM2M,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GISS-E2-H-CC,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GISS-E2-H,
       project: CMIP5,
@@ -303,14 +286,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r2i1p1,
     }
-
   - {
       dataset: GISS-E2-H,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p2,
     }
-
   - {
       dataset: GISS-E2-H,
       project: CMIP5,
@@ -323,14 +304,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r2i1p3,
     }
-
   - {
       dataset: GISS-E2-R-CC,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: GISS-E2-R,
       project: CMIP5,
@@ -343,14 +322,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r2i1p1,
     }
-
   - {
       dataset: GISS-E2-R,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p2,
     }
-
   - {
       dataset: GISS-E2-R,
       project: CMIP5,
@@ -363,14 +340,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r2i1p3,
     }
-
   - {
       dataset: HadGEM2-CC,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: HadGEM2-ES,
       project: CMIP5,
@@ -395,14 +370,12 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r4i1p1,
     }
-
   - {
       dataset: inmcm4,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: IPSL-CM5A-LR,
       project: CMIP5,
@@ -427,35 +400,30 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r4i1p1,
     }
-
   - {
       dataset: IPSL-CM5A-MR,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: IPSL-CM5B-LR,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: MIROC-ESM-CHEM,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: MIROC-ESM,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   # MIROC5 has extended historical runs (overlap with RCP85) the pre-processor can't merge
   # the first ensemble member for rsus (for the other ones it works)
   # - {dataset: MIROC5, project: CMIP5, exp: [historical, rcp85], ensemble: r1i1p1}
@@ -471,7 +439,6 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r3i1p1,
     }
-
   - {
       dataset: MPI-ESM-LR,
       project: CMIP5,
@@ -490,35 +457,30 @@ datasets: &model_data
       exp: [historical, rcp85],
       ensemble: r3i1p1,
     }
-
   - {
       dataset: MPI-ESM-MR,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: MRI-CGCM3,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: MRI-ESM1,
       project: CMIP5,
       exp: [historical, esmrcp85],
       ensemble: r1i1p1,
     } #rcp85 under diff exp on JASMIN?
-
   - {
       dataset: NorESM1-ME,
       project: CMIP5,
       exp: [historical, rcp85],
       ensemble: r1i1p1,
     }
-
   - {
       dataset: NorESM1-M,
       project: CMIP5,
@@ -538,15 +500,16 @@ preprocessors:
       mask_out: sea
 
   climatological_mean: &mean
+    <<: *general
     climate_statistics:
       operator: mean
 
   climatological_std: &std
+    <<: *general
     climate_statistics:
       operator: std_dev
 
   region: &region
-    <<: *general
     extract_region:
       start_longitude: 1
       end_longitude: 17
@@ -563,6 +526,7 @@ preprocessors:
 
   temperature_anomalies:
     custom_order: true
+    <<: *general
     <<: *region
     area_statistics:
       operator: mean
@@ -570,7 +534,7 @@ preprocessors:
       operator: mean
     anomalies:
       period: full
-      reference:
+      reference: &ref_period
         start_year: 1981
         start_month: 1
         start_day: 1
@@ -579,12 +543,31 @@ preprocessors:
         end_day: 31
       standardize: false
 
+  area_season_mean:
+    <<: *general
+    <<: *region
+    area_statistics:
+      operator: mean
+    climate_statistics:
+      period: season
+      operator: mean
+
 diagnostics:
   calculate_weights_climwip:
     variables:
+      tas_CLIM_i: &independence_settings
+        short_name: tas
+        start_year: 1980
+        end_year: 2014
+        mip: Amon
+        preprocessor: climatological_mean
+        additional_datasets: *obs_data
+      psl_CLIM_i:
+        <<: *independence_settings
+        short_name: psl
       tas_CLIM: &common_settings
         short_name: tas
-        start_year: 1995
+        start_year: 1980
         end_year: 2014
         mip: Amon
         preprocessor: region_mean
@@ -611,20 +594,20 @@ diagnostics:
         derive: true
         force_derivation: false
       # only needed if no performance sigma is given
-      # CLIM_future:
-      #   short_name: tas
-      #   start_year: 2081
-      #   end_year: 2100
-      #   mip: Amon
-      #   preprocessor: region_mean
+      CLIM_future:
+        short_name: tas
+        start_year: 2031
+        end_year: 2060
+        mip: Amon
+        preprocessor: region_mean
 
     scripts:
       climwip:
         script: weighting/climwip/main.py
         obs_data: native6
         combine_ensemble_members: false
-        performance_sigma: 0.546 # <-----
-        independence_sigma: 0.643 # <-----
+        # performance_sigma: 0.546 # <-----
+        independence_sigma: 0.54 #0.643 # <-----
         performance_contributions:
           tas_CLIM: 1
           pr_CLIM: 1
@@ -633,15 +616,11 @@ diagnostics:
           rlds_STD: 1
           rsus_STD: 1
         independence_contributions:
-          tas_CLIM: 1
-          pr_CLIM: 1
-          rsds_CLIM: 1
-          rsus_CLIM: 1
-          rlds_STD: 1
-          rsus_STD: 1
+          tas_CLIM_i: 1
+          psl_CLIM_i: 1
         # only needed if no performance sigma is given
-        # calibrate_performance_sigma:
-        #   target: CLIM_future
+        calibrate_performance_sigma:
+          target: CLIM_future
 
   weighted_temperature_graph:
     variables:
@@ -655,26 +634,84 @@ diagnostics:
         script: weighting/weighted_temperature_graph.py
         ancestors: [calculate_weights_climwip/climwip, tas]
         weights: "weights.nc"
+        settings:
+          <<: *ref_period
+          central_estimate: mean
+          lower_bound: 16.7
+          upper_bound: 83.3
 
   weighted_temperature_map:
     variables:
-      tas:
+      tas_CLIM_future:
         short_name: tas
-        start_year: 2081
-        end_year: 2100
+        start_year: 2031
+        end_year: 2060
         mip: Amon
         preprocessor: region_mean
-      tas_reference:
+      tas_CLIM_reference:
         short_name: tas
-        start_year: 1995
+        start_year: 1980
         end_year: 2014
         mip: Amon
         preprocessor: region_mean
     scripts:
       weighted_temperature_map:
         script: weighting/weighted_temperature_map.py
-        ancestors: [calculate_weights_climwip/climwip, tas, tas_reference]
+        ancestors:
+          [
+            calculate_weights_climwip/climwip,
+            tas_CLIM_future,
+            tas_CLIM_reference,
+          ]
         weights: "weights.nc"
         # optional arguments
         antimeridian: pacific
         model_aggregation: mean # [ mean (default) | median | integer in (0, 100) ]
+
+  temperature_pdf:
+    variables:
+      tas_CLIM_future:
+        short_name: tas
+        start_year: 2031
+        end_year: 2060
+        mip: Amon
+        preprocessor: area_season_mean
+      tas_CLIM_reference:
+        short_name: tas
+        start_year: 1980
+        end_year: 2014
+        mip: Amon
+        preprocessor: area_season_mean
+    scripts:
+      weighted_temperature_pdf:
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/ClimWIP_pdfs.py
+        ancestors:
+          [
+            calculate_weights_climwip/climwip,
+            tas_CLIM_future,
+            tas_CLIM_reference,
+          ]
+        weights: "weights.nc"
+        var: tas
+
+  precipitation_pdf:
+    variables:
+      pr_CLIM_future:
+        short_name: pr
+        start_year: 2031
+        end_year: 2060
+        mip: Amon
+        preprocessor: area_season_mean
+      pr_CLIM_reference:
+        short_name: pr
+        start_year: 1980
+        end_year: 2014
+        mip: Amon
+        preprocessor: area_season_mean
+    scripts:
+      weighted_precipitation_pdf:
+        script: /home/users/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/ClimWIP_pdfs.py
+        ancestors:
+          [calculate_weights_climwip/climwip, pr_CLIM_future, pr_CLIM_reference]
+        weights: "weights.nc"
+        var: pr
