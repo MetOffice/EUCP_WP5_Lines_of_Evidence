@@ -168,8 +168,8 @@ def plot_map(pdata, extent, var, ax, legend=False):
     ax.set_extent(extent)
     # set scales
     if var in ("pr", "pr_diff"):
-        vmn = -30
-        vmx = 30
+        vmn = -50
+        vmx = 50
         # cmap = "brewer_RdYlBu_11"
         cmap = "RdBu"
     elif var == "tas_diff":
@@ -179,7 +179,8 @@ def plot_map(pdata, extent, var, ax, legend=False):
     else:
         vmn = 0.5
         vmx = 5
-        cmap = "brewer_YlOrRd_09"
+        cmap = "Reds"
+        # cmap = "brewer_YlOrRd_09"
         # cmap = "magma_r"
     # ensure longitude coordinates straddle the meridian for GCM origin data
     if pdata.coord("longitude").ndim == 1:
@@ -251,7 +252,7 @@ def main(cfg):
         proj_key = proj
         # loop over the models
         for m in models:
-            if proj[:6].upper() == "CORDEX":
+            if proj == "CORDEX":
                 # then we need to go one deeper in the dictionary to deal with driving models
                 drivers = group_metadata(models[m], "driver")
                 projections[proj][m] = dict.fromkeys(drivers.keys())
@@ -290,6 +291,19 @@ def main(cfg):
                     if proj_key not in model_lists:
                         model_lists[proj_key] = []
                     model_lists[proj_key].append(f"{proj_key} {ens}")
+            elif "cordex-cpm" in proj:
+                # in this case need to split by domain as same model spec
+                # is used in multiple domains in some cases
+                domains = group_metadata(models[m], "domain")
+                proj_key = "cordex-cpm"
+                projections[proj_key][m] = dict.fromkeys(domains.keys())
+                for dom in domains:
+                    logging.info(f"calculating anomalies for  {proj_key} {dom} {m}")
+                    anoms = get_anomalies(domains[dom], rel_change)
+                    projections[proj_key][m][dom] = anoms
+                if proj_key not in model_lists:
+                        model_lists[proj_key] = []
+                model_lists[proj_key].append(f"{dom} {m}")
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
                 anoms = get_anomalies(models[m], rel_change)
@@ -391,6 +405,18 @@ def main(cfg):
                     f"{cfg['plot_dir']}/{seasons[s]}/{p}_{m}_map_{seasons[s]}.png"
                 )
                 plt.close()
+
+                # save calculated anomaly data, in case we want to work with it later
+                # make directory
+                try:
+                    os.mkdir(f"{cfg['work_dir']}/{seasons[s]}")
+                except FileExistsError:
+                    pass
+
+                iris.save(
+                    pdata[m],
+                    f"{cfg['work_dir']}/{seasons[s]}/{p}_{m}_anom_{seasons[s]}.nc"
+                )
 
         # now make panel plots for the mean data
         scon = iris.Constraint(season_number=s)

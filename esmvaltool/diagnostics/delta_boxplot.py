@@ -248,7 +248,7 @@ def prepare_scatter_data(x_data, y_data, project):
     return x_vals, y_vals, labels
 
 
-def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
+def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False, plot_text=True):
     if RCM_markers:
         label_props = {}
         marker_props = enumerate((cycler(marker=['o', 'P', 'd']) * cycler(color=list('bgrcmy'))))
@@ -279,7 +279,8 @@ def labelled_scatter(x_data, y_data, labels, ax, RCM_markers=False):
         else:
             ax.scatter(x_val, y_val, label=f"{i} - {labels[i]}")
 
-        ax.text(x_val, y_val, i, fontsize=10)
+        if plot_text:
+            ax.text(x_val, y_val, i, fontsize=10)
 
     # plot a diagonal equivalence line
     ax.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5)
@@ -347,14 +348,14 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     ax_scatter2 = plt.subplot(224)
 
     # Create GCM / RCM scatter
-    labelled_scatter(GCM_sc, RCM_sc1, labels1, ax_scatter1, RCM_markers=True)
+    labelled_scatter(GCM_sc, RCM_sc1, labels1, ax_scatter1, RCM_markers=True, plot_text=False)
     ax_scatter1.set_xlabel('GCM')
     ax_scatter1.set_ylabel('RCM')
     if min(RCM_sc1) < 0 < max(RCM_sc1):
         ax_scatter1.axhline(ls=':', color='k', alpha=0.75)
 
     # create RCM / CPM scatter
-    labelled_scatter(RCM_sc2, CPM, labels2, ax_scatter2)
+    labelled_scatter(RCM_sc2, CPM, labels2, ax_scatter2, RCM_markers=False, plot_text=False)
     ax_scatter2.set_xlabel('RCM')
     ax_scatter2.set_ylabel('CPM')
     if min(CPM) < 0 < max(CPM):
@@ -646,9 +647,12 @@ def main(cfg):
             pickle.dump(pickle_dict, open(f'{cfg["work_dir"]}/sample_plotting_data.pkl', 'wb'))
 
         # save details of values used for plotting the boxplots
+        save_anoms_txt(plotting_dict[season]['CMIP6'], f'{cfg["work_dir"]}/CMIP6_{season}.txt')
         save_anoms_txt(plotting_dict[season]['CMIP5'], f'{cfg["work_dir"]}/CMIP5_{season}.txt')
         save_anoms_txt(plotting_dict[season]['CORDEX'], f'{cfg["work_dir"]}/CORDEX_{season}.txt')
         save_anoms_txt(plotting_dict[season]['cordex-cpm'], f'{cfg["work_dir"]}/CPM_{season}.txt')
+        save_anoms_txt(plotting_dict[season]['UKCP18 land-gcm'], f'{cfg["work_dir"]}/UKCP_gcm_{season}.txt')
+        save_anoms_txt(plotting_dict[season]['UKCP18 land-rcm'], f'{cfg["work_dir"]}/UKCP_rcm_{season}.txt')
 
     # print all datasets used
     print("Input models for plots:")
