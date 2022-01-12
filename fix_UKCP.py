@@ -36,7 +36,7 @@ def fix_lon_lat_names(cube):
 def var_fixes(cube):
     # variable specific fixes
     if cube.var_name == "tas":
-        height_c = iris.coords.Coord(1.5, "height", units="m")
+        height_c = iris.coords.AuxCoord(1.5, standard_name="height", units="m")
         cube.add_aux_coord(height_c)
         cube.convert_units("K")
     elif cube.var_name == "pr":
@@ -59,6 +59,13 @@ def fix_gcm_file(f):
 
     # fix lon and lat names
     new_c = fix_lon_lat_names(new_c)
+
+    # sort coord bounds out
+    new_c = new_c.intersection(longitude = (0.0, 360.0))
+    new_bounds = new_c.coord('longitude').bounds.copy()
+    new_bounds[0][0] = 0.0
+    new_bounds[-1][1] = 360.0
+    new_c.coord('longitude').bounds = new_bounds
 
     # remove unneeded coords
     new_c = remove_unneeded_coords(new_c)
