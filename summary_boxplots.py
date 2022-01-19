@@ -10,12 +10,23 @@ from ascend import shape
 from glob import glob as glob
 import os
 import argparse
+
+from esmvaltool.diagnostics import plotting
 # works in SCITOOLS Default/next (2021-03-18)
+
+
+# map WP2 data to GCM group
+WP2_METHODS = {
+    "ETHZ_CMIP6_ClimWIP": "CMIP6",
+    "ICTP_CMIP6_REA": "CMIP6",
+    "ICTP_CMIP5_REA": "CMIP5",
+    "UKMO_CMIP6_UKCP": "UKCP_GCM"
+}
 
 
 def box_plot(data, ax, edge_color, fill_color, positions, widths):
     bp = ax.boxplot(data, patch_artist=True, positions = positions, widths=widths, showfliers=False, whis=[10,90])
-    
+
     for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
         if element == 'medians':
             col = 'black'
@@ -24,8 +35,8 @@ def box_plot(data, ax, edge_color, fill_color, positions, widths):
         plt.setp(bp[element], color=col)
 
     for patch in bp['boxes']:
-        patch.set(facecolor=fill_color)       
-        
+        patch.set(facecolor=fill_color)
+
     return bp
 
 
@@ -41,11 +52,11 @@ def bxp(data, ax, colour, alpha, position, width, **kwargs):
 
     for patch in bp['boxes']:
         patch.set(facecolor=colour)
-        patch.set(alpha = alpha)   
-        
+        patch.set(alpha = alpha)
+
     return bp
 
-    
+
 def create_x_points(ys, basex, offset):
     xs = []
     for i, v in enumerate(ys):
@@ -65,12 +76,12 @@ def create_x_points(ys, basex, offset):
             else:
                 xs.append(basex)
             vm1 = v
-    
+
     return xs
 
 def mask_wp2_atlas_data(cube, shp):
     # mask wp2 data using shape file
-    
+
     # approach varies depending on if cube is downloaded from WP2 atlas
     # or direct from Glen's folders
     if cube.ndim == 4:
@@ -102,14 +113,13 @@ def load_wp2_atlas(method, var, area, season):
     # define region constraint if lat and lon supplied
     if type(area) == list:
         region = iris.Constraint(
-            longitude = lambda x: area[0] <= x <= area[1],
-            latitude = lambda x: area[2] <= x <= area[3]
+            longitude=lambda x: area[0] <= x <= area[1],
+            latitude=lambda x: area[2] <= x <= area[3]
         )
 
     bxp_obs = []
     for data in ["cons", "uncons"]:
         fname = f"{base_path}/atlas_EUCP_{method}_{data}_{var}.nc"
-        
         cube = iris.load_cube(fname)
 
         # extract shape / region
@@ -153,15 +163,16 @@ def load_wp2_atlas(method, var, area, season):
 
     return bxp_obs
 
+
 def load_wp2_glen(var, area, season):
     # Load WP2 constraint data from files in Glen's user space.
     # define constraint if using a rectangle
     if type(area) == list:
         region = iris.Constraint(
-            longitude = lambda x: area[0] <= x <= area[1],
-            latitude = lambda x: area[2] <= x <= area[3]
+            longitude=lambda x: area[0] <= x <= area[1],
+            latitude=lambda x: area[2] <= x <= area[3]
         )
-    
+
     results = []
     season = season.lower()
     for d_type in ["all", "prior"]:
@@ -193,37 +204,9 @@ def load_wp2_glen(var, area, season):
             "label": label
         }
 
-
         results.append(bxp_stats)
 
     return results
-
-
-def remove_institute_from_driver(driver_str):
-    # function to remove superfluous institute information from 
-    # driving model supplied in CORDEX descriptions
-    INSTITUTES = [
-        'IPSL',
-        'NCC',
-        'MPI-M',
-        'CNRM-CERFACS',
-        'ICHEC',
-        'MOHC',
-        'KNMI',
-        'HCLIMcom',
-        'SMHI'
-    ]
-    # remove the institute bit from the "driver" string
-    new_str = driver_str
-    # loop through the institutes and remove them if found
-    for i in INSTITUTES:
-        i = '^' + i + '-'
-        new_str = re.sub(i, '', new_str)
-
-    if new_str == driver_str:
-        raise ValueError(f"No institute found to remove from {driver_str}")
-
-    return new_str
 
 
 def load_esmval_gridded_data(recipe, type, area, season):
@@ -257,7 +240,7 @@ def load_esmval_gridded_data(recipe, type, area, season):
         # ignore diff or mean files
         if any([s in fname for s in ['diff', 'mean']]):
             continue
-        
+
         # load data
         cube = iris.load_cube(fname)
 
@@ -279,7 +262,6 @@ def load_esmval_gridded_data(recipe, type, area, season):
         mask.mask_cube_inplace(cube)
         # need some sort of logic to test if the cube contains data for all of the supplied area,
         # if not we should reject it...
-        
 
         # and compute weighted area average
         # this is using weighted area weights from Ascend
@@ -296,16 +278,16 @@ def load_esmval_gridded_data(recipe, type, area, season):
         mname = mname.split("_anom")[0]
 
         values[mname] = area_mean.data.item()
-        
+
     return values
 
 
 def check_data_shape_intersection(cube, shp):
     # return proportion of grid boxes in shp (when put on same grid as cube)
     # that have valid corresponding data in cube
-    
+
     # check cube has a coord system, if not add one
-    if cube.coord('longitude').coord_system == None:
+    if cube.coord('longitude').coord_system is None:
         cube.coord('longitude').coord_system = iris.coord_systems.GeogCS(6371229.0)
         cube.coord('latitude').coord_system = iris.coord_systems.GeogCS(6371229.0)
 
@@ -328,82 +310,7 @@ def check_data_shape_intersection(cube, shp):
     return valid_boxes
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("recipe")
-    parser.add_argument("variable")
-    parser.add_argument("season")
-    parser.add_argument("area")
-    args = parser.parse_args()
-
-    recipe = args.recipe
-    VAR = args.variable
-    season = args.season
-    AREA = args.area
-
-    if AREA == "boe":
-        area = shape.create([(-5,42), (30,42), (30,52), (-5,52)], {'shape': 'rectangle'}, 'Polygon')
-    else:
-        area = shape.load_shp('/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp', name=AREA)[0]
-
-    # read data
-    cmip5 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP5", area, season), orient="index")
-    cmip6 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP6", area, season), orient="index")
-    cordex = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CORDEX", area, season), orient="index")
-    cpm = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "cordex-cpm", area, season), orient="index")
-    ukcp_g = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-gcm", area, season), orient="index")
-    ukcp_r = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-rcm", area, season), orient="index")
-
-    # List of models for Romania case study
-    niculita_model_list = [
-        'RCA4 MPI-M-MPI-ESM-LR',
-        'RCA4 MOHC-HadGEM2-ES',
-        'RCA4 ICHEC-EC-EARTH',
-        'RCA4 CNRM-CERFACS-CNRM-CM5',
-        'REMO2009 MPI-M-MPI-ESM-LR',
-        'RACMO22E MOHC-HadGEM2-ES',
-        'RACMO22E ICHEC-EC-EARTH', 
-        'HIRHAM5 ICHEC-EC-EARTH',
-        ]
-
-    # list of models with evolving aerosols. See table B2 from:
-    # Gutiérrez, C., Somot, S., Nabat, P., Mallet, M., Corre, L., Van Meijgaard, E., et al. (2020). Future evolution of surface solar radiation and photovoltaic potential in Europe: investigating the role of aerosols. Environmental Research Letters, 15(3). https://doi.org/10.1088/1748-9326/ab6666
-    aerosol_model_list = []
-    for c in cordex.index:
-        if any([s in c for s in ['RACMO22E', 'ALADIN', 'HadREM3']]):
-            aerosol_model_list.append(c)
-
-    # case_study_model_list = aerosol_model_list
-    # case_study_model_list = niculita_model_list
-    case_study_model_list = []
-
-    # This dictionary maps CPM string to a RCM GCM string
-    CPM_DRIVERS = {
-        'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
-        'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
-        'HCLIMcom-HCLIM38-AROME': 'HCLIMcom-HCLIM38-ALADIN ICHEC-EC-EARTH',
-        'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
-        'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
-        'ICTP-RegCM4-7-0': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
-        'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
-        'KNMI-HCLIM38h1-AROME': 'KNMI-RACMO23E KNMI-EC-EARTH',
-        'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
-        'HadREM3-RA-UM10.1': 'MOHC-HadGEM3-GC3.1-N512 MOHC-HadGEM2-ES'
-    }
-
-    # List of CPM drivers from CORDEX to know which to plot as triangles
-    cpm_driver_list = []
-    for n in cpm.index:
-        cpm_driver_list.append(CPM_DRIVERS[n.split()[0]])
-
-    # map WP2 data to GCM group
-    wp2_methods = {
-        "ETHZ_CMIP6_ClimWIP": "CMIP6",
-        "ICTP_CMIP6_REA": "CMIP6",
-        "ICTP_CMIP5_REA": "CMIP5",
-        "UKMO_CMIP6_UKCP": "UKCP_GCM"
-    }
-
+def panel_boxplot(plot_df, constraint_data, area, season, var, case_study=False):
     # set colours
     colour_map = {
         "CMIP6": "tab:blue",
@@ -413,62 +320,9 @@ def main():
         "UKCP_GCM": "tab:purple",
     }
 
-    # create data frame of just CPM drivers
-    cpm_driver_df = cordex[cordex.index.isin(cpm_driver_list)]
-    # create subset of models from case study
-    case_study_df = cordex[cordex.index.isin(case_study_model_list)]
-
-    # CMIP5 CORDEX drivers can be inferred directly from CORDEX model names
-    cordex_driver_list = list(
-        set(
-            [remove_institute_from_driver(n.split(' ')[1]) for n in cordex.index]
-        )
-    )
-    cordex_driver_df = cmip5[cmip5.index.isin(cordex_driver_list)]
-
-    # chuck everything in a dataframe for plotting
-    plot_df = pd.DataFrame(
-        {
-            "CMIP6": cmip6[0],
-            "CMIP5": cmip5[0],
-            "CORDEX Drivers": cordex_driver_df[0],
-            "CORDEX": cordex[0],
-            "CPM Drivers": cpm_driver_df[0],
-            "Case study models": case_study_df[0],
-            "UKCP_GCM": ukcp_g[0],
-            "UKCP_RCM": ukcp_r[0],
-            "UKCP Drivers": ukcp_g[ukcp_g.index.isin(ukcp_r.index)][0],
-        }
-    )
-
-    if not cpm.empty:
-        plot_df["CPM"] = cpm[0]
-
-    # add case study models if using
-    if case_study_model_list:
-        plot_df["Case study models"] = case_study_df[0]
-
-    # my calculated ClimWIP data - not using for now
-    # pr_cmip5_climwip = iris.load_cube(CLIMWIP_PATH)
-    # ALP-3
-    # if AREA == "ALP-3":
-    #     area = [1, 17, 40, 50]
-    # else:
-    # # CEE-3
-    #     area = [18, 31, 41.5, 51.5]
-
-    # load WP2 atlas constraint data
-    constraint_data = {}
-    for m in wp2_methods.keys():
-        constraint_data[m] = load_wp2_atlas(m, VAR, area, season)
-
-    # also load Glen's UKCP data
-    constraint_data["UKMO_CMIP6_UKCP"] = load_wp2_glen(VAR, area, season)
-
-
     plt.rcParams.update({'font.size': 14})
     # create figure and axes
-    if len(case_study_model_list) > 0:
+    if case_study:
         f, axs = plt.subplots(1,4, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4, 1]})
     else:
         f, axs = plt.subplots(1,3, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4]})
@@ -476,13 +330,12 @@ def main():
     # size of dots in swarm plots
     swarm_size = 7
 
-
     # First panel
     # plot GCM boxes
     axs[0].clear()
 
     # plot boxes with matplotlib
-    box_plot([cmip6[0], cmip5[0], ukcp_g[0]], axs[0], "black", "None", [0, 1, 2], [0.5, 0.5, 0.5])
+    box_plot([plot_df["CMIP6"], plot_df["CMIP5"], plot_df["UKCP_GCM"]], axs[0], "black", "None", [0, 1, 2], [0.5, 0.5, 0.5])
 
     # plot dots
     sns.swarmplot(
@@ -496,42 +349,30 @@ def main():
     plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right")
     axs[0].set_title("GCMs")
 
-
     # plot constrained ranges. 2nd panel
     axs[1].clear()
     for i, k in enumerate(constraint_data.keys()):
-        colour = colour_map[wp2_methods[k]]
+        colour = colour_map[WP2_METHODS[k]]
         # constrained
         bxp([constraint_data[k][0]], axs[1], colour, 0.75, [i], 0.375)
         # unconstrained
         bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
 
-    # This is for my custom ClimWIP data, not using for now
-    # box_plot([pr_cmip5_climwip[2].data], axs[1], "grey", "lightgrey", [1], [0.375])
-    # axs[0].boxplot(
-    #     x=[cmip6[1], cmip5[1], pr_cmip5_climwip[2].data],
-    #     positions=[0, 1, 1],
-    #     whis=[10,90],
-    #     showfliers=False,
-    #     widths=[0.5, 0.5, 0.375],
-    #     patch_artist=True
-    # )
-
     axs[1].axhline(linestyle=":", color="k", alpha=0.5)
     plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
     axs[1].set_title("Uncertainty estimates\nfrom GCMs and observations")
 
-
     # third panel downscaled information
     axs[2].clear()
-    if cpm.empty:
-        data = plot_df[["CMIP5", "CORDEX", "UKCP_GCM", "UKCP_RCM"]]
-        palette = ["tab:orange", "tab:green", "tab:purple", "tab:purple"]
-    else:
+    if 'cpm' in plot_df:
         data = plot_df[["CMIP5", "CORDEX", "CPM", "UKCP_GCM", "UKCP_RCM"]]
         palette = ["tab:orange", "tab:green", "tab:red", "tab:purple", "tab:purple"]
+    else:
+        data = plot_df[["CMIP5", "CORDEX", "UKCP_GCM", "UKCP_RCM"]]
+        palette = ["tab:orange", "tab:green", "tab:purple", "tab:purple"]
+
     sns.swarmplot(
-        data=data, 
+        data=data,
         ax=axs[2],
         size=swarm_size,
         palette=palette
@@ -541,7 +382,7 @@ def main():
     x = create_x_points(y, 0.5, 0.05)
     axs[2].scatter(x, y, color="tab:orange", marker=">", s=50)
 
-    if not cpm.empty:
+    if 'cpm' in plot_df:
         # CPM drivers
         y = plot_df["CPM Drivers"].dropna()
         x = create_x_points(y, 1.5, 0.05)
@@ -563,12 +404,11 @@ def main():
     plt.setp(axs[2].get_xticklabels(), rotation=45, ha="right")
     axs[2].set_title("Downscaled Projections")
 
-
     # extra panel if a case study
-    if len(case_study_model_list) > 0:
+    if len(plot_df["Case study models"].dropna()) > 0:
         axs[3].clear()
         sns.swarmplot(
-            data = plot_df["Case study models"],
+            data=plot_df["Case study models"],
             ax=axs[3],
             size=swarm_size,
             palette=["tab:green"]
@@ -578,18 +418,145 @@ def main():
         plt.setp(axs[3].get_xticklabels(), rotation=45, ha="right")
         axs[3].set_title("From study")
 
-
-
     # Final figure spacing etc.
     # axs[0].set_ylabel("%")
-    plt.suptitle(f"{AREA} {season} {VAR}")
+    plt.suptitle(f"{area.attributes['NAME']} {season} {var}")
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.18, wspace=0.06)
 
     # save plot
     save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
-    plt.savefig(f"{save_path}/{AREA}_{season}_{VAR}.png")
+    plt.savefig(f"{save_path}/{area.attributes['NAME']}_{season}_{var}.png")
     plt.close()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("recipe")
+    parser.add_argument("variable")
+    parser.add_argument("season")
+    parser.add_argument("area")
+    args = parser.parse_args()
+
+    recipe = args.recipe
+    var = args.variable
+    season = args.season
+    area = args.area
+
+    if area == "boe":
+        area = shape.create([(-5,42), (30,42), (30,52), (-5,52)], {'shape': 'rectangle', 'NAME': 'boe'}, 'Polygon')
+    else:
+        area = shape.load_shp('/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp', name=area)[0]
+
+    # read data
+    cmip5 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP5", area, season), orient="index")
+    cmip6 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP6", area, season), orient="index")
+    cordex = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CORDEX", area, season), orient="index")
+    cpm = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "cordex-cpm", area, season), orient="index")
+    ukcp_g = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-gcm", area, season), orient="index")
+    ukcp_r = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-rcm", area, season), orient="index")
+
+    # List of models for Romania case study
+    # niculita_model_list = [
+    #     'RCA4 MPI-M-MPI-ESM-LR',
+    #     'RCA4 MOHC-HadGEM2-ES',
+    #     'RCA4 ICHEC-EC-EARTH',
+    #     'RCA4 CNRM-CERFACS-CNRM-CM5',
+    #     'REMO2009 MPI-M-MPI-ESM-LR',
+    #     'RACMO22E MOHC-HadGEM2-ES',
+    #     'RACMO22E ICHEC-EC-EARTH', 
+    #     'HIRHAM5 ICHEC-EC-EARTH',
+    #     ]
+
+    # list of models with evolving aerosols. See table B2 from:
+    # Gutiérrez, C., Somot, S., Nabat, P., Mallet, M., Corre, L., Van Meijgaard, E., et al. (2020). Future evolution of surface solar radiation and photovoltaic potential in Europe: investigating the role of aerosols. Environmental Research Letters, 15(3). https://doi.org/10.1088/1748-9326/ab6666
+    aerosol_model_list = []
+    for c in cordex.index:
+        if any([s in c for s in ['RACMO22E', 'ALADIN', 'HadREM3']]):
+            aerosol_model_list.append(c)
+
+    # case_study_model_list = aerosol_model_list
+    # case_study_model_list = niculita_model_list
+    case_study_model_list = []
+
+    # This dictionary maps CPM string to a RCM GCM string
+    cpm_drivers = {
+        'CNRM-AROME41t1': 'ALADIN63 CNRM-CERFACS-CNRM-CM5',
+        'CLMcom-CMCC-CCLM5-0-9': 'CCLM4-8-17 ICHEC-EC-EARTH',
+        'HCLIMcom-HCLIM38-AROME': 'HCLIMcom-HCLIM38-ALADIN ICHEC-EC-EARTH',
+        'GERICS-REMO2015': 'REMO2015 MPI-M-MPI-ESM-LR',
+        'COSMO-pompa': 'CCLM4-8-17 MPI-M-MPI-ESM-LR',
+        'ICTP-RegCM4-7-0': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+        'ICTP-RegCM4-7': 'ICTP-RegCM4-7-0 MOHC-HadGEM2-ES',
+        'KNMI-HCLIM38h1-AROME': 'KNMI-RACMO23E KNMI-EC-EARTH',
+        'SMHI-HCLIM38-AROME': 'SMHI-HCLIM38-ALADIN ICHEC-EC-EARTH',
+        'HadREM3-RA-UM10.1': 'MOHC-HadGEM3-GC3.1-N512 MOHC-HadGEM2-ES'
+    }
+
+    # List of CPM drivers from CORDEX to know which to plot as triangles
+    cpm_driver_list = []
+    for n in cpm.index:
+        cpm_driver_list.append(cpm_drivers[n.split()[0]])
+
+    # create data frame of just CPM drivers
+    cpm_driver_df = cordex[cordex.index.isin(cpm_driver_list)]
+    # create subset of models from case study
+    case_study_df = cordex[cordex.index.isin(case_study_model_list)]
+
+    # CMIP5 CORDEX drivers can be inferred directly from CORDEX model names
+    cordex_driver_list = list(
+        set(
+            [plotting.remove_institute_from_driver(n.split(' ')[1]) for n in cordex.index]
+        )
+    )
+    cordex_driver_df = cmip5[cmip5.index.isin(cordex_driver_list)]
+
+    # chuck everything in a dataframe for plotting
+    df_dict = {
+            "CMIP6": cmip6[0],
+            "CMIP5": cmip5[0],
+            "CORDEX Drivers": cordex_driver_df[0],
+            "CORDEX": cordex[0],
+            "CPM Drivers": cpm_driver_df[0],
+            "Case study models": case_study_df[0],
+            "UKCP_GCM": ukcp_g[0],
+            "UKCP_RCM": ukcp_r[0],
+            "UKCP Drivers": ukcp_g[ukcp_g.index.isin(ukcp_r.index)][0],
+        }
+    
+    if not cpm.empty:
+        df_dict["CPM"] = cpm[0]
+
+    plot_df = pd.DataFrame(df_dict)
+
+    # add case study models if using
+    if case_study_model_list:
+        plot_df["Case study models"] = case_study_df[0]
+
+    # load WP2 atlas constraint data
+    constraint_data = {}
+    for m in WP2_METHODS.keys():
+        constraint_data[m] = load_wp2_atlas(m, var, area, season)
+
+    # also load Glen's UKCP data
+    constraint_data["UKMO_CMIP6_UKCP"] = load_wp2_glen(var, area, season)
+
+    # now plot
+    # panel plot
+    panel_boxplot(plot_df, constraint_data, area, season, var)
+
+    # scatter plot
+    # need to prepare data
+    cmip_x, cordex_y, cordex_labels = plotting.prepare_scatter_data(
+        plot_df["CORDEX Drivers"].dropna().to_dict(), plot_df["CORDEX"].dropna().to_dict(), "CORDEX"
+        )
+
+    cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(
+        plot_df["CPM Drivers"].dropna().to_dict(), plot_df["CPM"].dropna().to_dict(), "CPM"
+    )
+    plotting.mega_scatter(
+        cmip_x, cordex_y, cordex_x, cpm_y, plot_df["CMIP5"].dropna().to_list(), plot_df["CORDEX"].dropna().to_list(), cordex_labels, cpm_labels, f"{area.attributes['NAME']} {season} {var}", "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+    )
 
 
 if __name__ == '__main__':

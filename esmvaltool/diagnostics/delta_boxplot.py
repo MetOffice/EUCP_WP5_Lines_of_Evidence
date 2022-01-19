@@ -176,7 +176,7 @@ def get_anomalies(ds_list, relative=False):
 
     if relative:
         diff = fut_cube - base_cube
-        anomaly = (diff / base_cube) * 100
+        anomaly = (diff / base_cube) * 100.0
         anomaly.units = "%"
     else:
         anomaly = fut_cube - base_cube
