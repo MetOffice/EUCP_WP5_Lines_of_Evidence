@@ -2,9 +2,6 @@ import matplotlib
 matplotlib.use('Agg')
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import re
 import iris
 from ascend import shape
 from glob import glob as glob
@@ -14,70 +11,6 @@ import argparse
 from esmvaltool.diagnostics import plotting
 # works in SCITOOLS Default/next (2021-03-18)
 
-
-# map WP2 data to GCM group
-WP2_METHODS = {
-    "ETHZ_CMIP6_ClimWIP": "CMIP6",
-    "ICTP_CMIP6_REA": "CMIP6",
-    "ICTP_CMIP5_REA": "CMIP5",
-    "UKMO_CMIP6_UKCP": "UKCP_GCM"
-}
-
-
-def box_plot(data, ax, edge_color, fill_color, positions, widths):
-    bp = ax.boxplot(data, patch_artist=True, positions = positions, widths=widths, showfliers=False, whis=[10,90])
-
-    for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
-        if element == 'medians':
-            col = 'black'
-        else:
-            col = edge_color
-        plt.setp(bp[element], color=col)
-
-    for patch in bp['boxes']:
-        patch.set(facecolor=fill_color)
-
-    return bp
-
-
-def bxp(data, ax, colour, alpha, position, width, **kwargs):
-    bp = ax.bxp(data, patch_artist=True, positions=position, widths=width, showfliers=False, **kwargs)
-    for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
-        if element == 'medians':
-            col = 'black'
-        else:
-            col = colour
-        plt.setp(bp[element], color=col)
-        plt.setp(bp[element], alpha=alpha)
-
-    for patch in bp['boxes']:
-        patch.set(facecolor=colour)
-        patch.set(alpha = alpha)
-
-    return bp
-
-
-def create_x_points(ys, basex, offset):
-    xs = []
-    for i, v in enumerate(ys):
-        if i == 0:
-            xs.append(basex)
-            vm1 = v
-        else:
-            if abs(v - vm1) <= 1:
-                if xs[i-1] < basex:
-                    xs.append(basex + offset)
-                elif xs[i-1] == basex:
-                    xs[i-1] = basex - offset
-                    xs.append(basex + offset)
-                else:
-                    # previous version has been offset positively
-                    xs.append(basex - offset)
-            else:
-                xs.append(basex)
-            vm1 = v
-
-    return xs
 
 def mask_wp2_atlas_data(cube, shp):
     # mask wp2 data using shape file
@@ -310,126 +243,6 @@ def check_data_shape_intersection(cube, shp):
     return valid_boxes
 
 
-def panel_boxplot(plot_df, constraint_data, area, season, var, case_study=False):
-    # set colours
-    colour_map = {
-        "CMIP6": "tab:blue",
-        "CMIP5": "tab:orange",
-        "CORDEX": "tab:green",
-        "CPM": "tab:red",
-        "UKCP_GCM": "tab:purple",
-    }
-
-    plt.rcParams.update({'font.size': 14})
-    # create figure and axes
-    if case_study:
-        f, axs = plt.subplots(1,4, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4, 1]})
-    else:
-        f, axs = plt.subplots(1,3, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4]})
-    # f.suptitle("Projected % change in summer (JJA) rainfall for Romania. 2041-2060 vs 1995-2014. RCP8.5/ssp585")
-    # size of dots in swarm plots
-    swarm_size = 7
-
-    # First panel
-    # plot GCM boxes
-    axs[0].clear()
-
-    # plot boxes with matplotlib
-    box_plot([plot_df["CMIP6"], plot_df["CMIP5"], plot_df["UKCP_GCM"]], axs[0], "black", "None", [0, 1, 2], [0.5, 0.5, 0.5])
-
-    # plot dots
-    sns.swarmplot(
-        data=plot_df[["CMIP6", "CMIP5", "UKCP_GCM"]], ax=axs[0],
-        size=swarm_size, palette=["tab:blue", "tab:orange", "tab:purple"],
-        alpha=0.75
-        )
-
-    # last bits of formatting
-    axs[0].axhline(linestyle=":", color="k", alpha=0.5)
-    plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right")
-    axs[0].set_title("GCMs")
-
-    # plot constrained ranges. 2nd panel
-    axs[1].clear()
-    for i, k in enumerate(constraint_data.keys()):
-        colour = colour_map[WP2_METHODS[k]]
-        # constrained
-        bxp([constraint_data[k][0]], axs[1], colour, 0.75, [i], 0.375)
-        # unconstrained
-        bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
-
-    axs[1].axhline(linestyle=":", color="k", alpha=0.5)
-    plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
-    axs[1].set_title("Uncertainty estimates\nfrom GCMs and observations")
-
-    # third panel downscaled information
-    axs[2].clear()
-    if 'cpm' in plot_df:
-        data = plot_df[["CMIP5", "CORDEX", "CPM", "UKCP_GCM", "UKCP_RCM"]]
-        palette = ["tab:orange", "tab:green", "tab:red", "tab:purple", "tab:purple"]
-    else:
-        data = plot_df[["CMIP5", "CORDEX", "UKCP_GCM", "UKCP_RCM"]]
-        palette = ["tab:orange", "tab:green", "tab:purple", "tab:purple"]
-
-    sns.swarmplot(
-        data=data,
-        ax=axs[2],
-        size=swarm_size,
-        palette=palette
-    )
-    # CORDEX drivers
-    y = plot_df["CORDEX Drivers"].dropna()
-    x = create_x_points(y, 0.5, 0.05)
-    axs[2].scatter(x, y, color="tab:orange", marker=">", s=50)
-
-    if 'cpm' in plot_df:
-        # CPM drivers
-        y = plot_df["CPM Drivers"].dropna()
-        x = create_x_points(y, 1.5, 0.05)
-        axs[2].scatter(x, y, color="tab:green", marker=">", s=50)
-        ukcp_div = 2.5
-    else:
-        ukcp_div = 1.5
-
-    # Divider line for UKCP
-    axs[2].axvline(ukcp_div, color="lightgrey")
-
-    # UKCP drivers
-    y = plot_df["UKCP Drivers"].dropna()
-    x = create_x_points(y, ukcp_div+1, 0.05)
-    axs[2].scatter(x, y, color="tab:purple", marker=">", s=50)
-
-    # Final formatting etc.
-    axs[2].axhline(linestyle=":", color="k", alpha=0.5)
-    plt.setp(axs[2].get_xticklabels(), rotation=45, ha="right")
-    axs[2].set_title("Downscaled Projections")
-
-    # extra panel if a case study
-    if len(plot_df["Case study models"].dropna()) > 0:
-        axs[3].clear()
-        sns.swarmplot(
-            data=plot_df["Case study models"],
-            ax=axs[3],
-            size=swarm_size,
-            palette=["tab:green"]
-            )
-        axs[3].set_xticklabels(["Case study models"])
-        axs[3].axhline(linestyle=":", color="k", alpha=0.5)
-        plt.setp(axs[3].get_xticklabels(), rotation=45, ha="right")
-        axs[3].set_title("From study")
-
-    # Final figure spacing etc.
-    # axs[0].set_ylabel("%")
-    plt.suptitle(f"{area.attributes['NAME']} {season} {var}")
-    plt.tight_layout()
-    plt.subplots_adjust(bottom=0.18, wspace=0.06)
-
-    # save plot
-    save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
-    plt.savefig(f"{save_path}/{area.attributes['NAME']}_{season}_{var}.png")
-    plt.close()
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("recipe")
@@ -535,7 +348,7 @@ def main():
 
     # load WP2 atlas constraint data
     constraint_data = {}
-    for m in WP2_METHODS.keys():
+    for m in plotting.WP2_METHODS.keys():
         constraint_data[m] = load_wp2_atlas(m, var, area, season)
 
     # also load Glen's UKCP data
@@ -543,7 +356,7 @@ def main():
 
     # now plot
     # panel plot
-    panel_boxplot(plot_df, constraint_data, area, season, var)
+    plotting.panel_boxplot(plot_df, constraint_data, area, season, var)
 
     # scatter plot
     # need to prepare data
@@ -551,12 +364,22 @@ def main():
         plot_df["CORDEX Drivers"].dropna().to_dict(), plot_df["CORDEX"].dropna().to_dict(), "CORDEX"
         )
 
-    cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(
-        plot_df["CPM Drivers"].dropna().to_dict(), plot_df["CPM"].dropna().to_dict(), "CPM"
-    )
-    plotting.mega_scatter(
-        cmip_x, cordex_y, cordex_x, cpm_y, plot_df["CMIP5"].dropna().to_list(), plot_df["CORDEX"].dropna().to_list(), cordex_labels, cpm_labels, f"{area.attributes['NAME']} {season} {var}", "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
-    )
+    if not cpm.empty:
+        cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(
+            plot_df["CPM Drivers"].dropna().to_dict(), plot_df["CPM"].dropna().to_dict(), "CPM"
+        )
+        plotting.mega_scatter(
+            cmip_x, cordex_y, cordex_x, cpm_y,
+            plot_df["CMIP5"].dropna().to_list(), plot_df["CORDEX"].dropna().to_list(),
+            cordex_labels, cpm_labels, f"{area.attributes['NAME']} {season} {var}",
+            "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+        )
+    else:
+        plotting.simpler_scatter(
+            cmip_x, cordex_y, cordex_labels,
+            f"{area.attributes['NAME']} {season} {var}",
+            "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+        )
 
 
 if __name__ == '__main__':
