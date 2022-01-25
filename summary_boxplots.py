@@ -249,25 +249,59 @@ def main():
     parser.add_argument("variable")
     parser.add_argument("season")
     parser.add_argument("area")
+    parser.add_argument("gcm_anoms_recipe")
     args = parser.parse_args()
 
     recipe = args.recipe
     var = args.variable
     season = args.season
     area = args.area
+    anoms_files = f"/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/esmvaltool_output/{args.gcm_anoms_recipe}/work/global_tas_anomalies/anomalies/"
 
     if area == "boe":
         area = shape.create([(-5,42), (30,42), (30,52), (-5,52)], {'shape': 'rectangle', 'NAME': 'boe'}, 'Polygon')
     else:
+        print(f"Loading {area} shape")
         area = shape.load_shp('/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp', name=area)[0]
 
-    # read data
-    cmip5 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP5", area, season), orient="index")
-    cmip6 = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CMIP6", area, season), orient="index")
-    cordex = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "CORDEX", area, season), orient="index")
-    cpm = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "cordex-cpm", area, season), orient="index")
-    ukcp_g = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-gcm", area, season), orient="index")
-    ukcp_r = pd.DataFrame.from_dict(load_esmval_gridded_data(recipe, "UKCP18 land-rcm", area, season), orient="index")
+    # read data and place in a dataframe
+    plot_df = pd.DataFrame(columns=["model", "value", "project", "data type"])
+
+    # easiest way seems to be to append a row at a time
+    for proj in ["CMIP5", "CMIP6", "CORDEX", "cordex-cpm", "UKCP18 land-gcm", "UKCP18 land-rcm"]:
+        data_dict = load_esmval_gridded_data(recipe, proj, area, season)
+        for k, v in data_dict.items():
+            row = [k, v, proj, "standard"]
+            plot_df.loc[len(plot_df)] = row
+
+    # load gcm temp anoms
+    anoms = {}
+    for p in ["CMIP5", "CMIP6", "UKCP18"]:
+        csv_file = f"{anoms_files}{p}_global_tas_anom.csv"
+        anoms[p] = pd.read_csv(csv_file, header=None, dtype={0:'string'})
+
+        # now loop over values loaded and construct the temp weighted anomaly
+        for row in anoms[p].iterrows():
+            # get the appropriate model value
+            if p == "UKCP18":
+                proj = "UKCP18 land-gcm"
+            else:
+                proj = p
+            m_val = plot_df[(plot_df["model"] == row[1][0]) & (plot_df["project"] == proj)]["value"].values
+            if len(m_val) > 1:
+                raise ValueError(f"Found multiple entries for {row[1][0]}")
+
+            m_val = m_val[0]
+
+            # compute the weighted anomaly
+            # i.e. we divide by the global anomaly to get degrees of warming
+            # per 1 degree of global warming
+            weighted_anom = m_val / row[1][1]
+
+            # now add new row in the datframe with the weighted info
+            new_row = [row[1][0], weighted_anom, proj, "weighted"]
+            plot_df.loc[len(plot_df)] = new_row
+
 
     # List of models for Romania case study
     # niculita_model_list = [
@@ -284,7 +318,7 @@ def main():
     # list of models with evolving aerosols. See table B2 from:
     # Gutiérrez, C., Somot, S., Nabat, P., Mallet, M., Corre, L., Van Meijgaard, E., et al. (2020). Future evolution of surface solar radiation and photovoltaic potential in Europe: investigating the role of aerosols. Environmental Research Letters, 15(3). https://doi.org/10.1088/1748-9326/ab6666
     aerosol_model_list = []
-    for c in cordex.index:
+    for c in plot_df[plot_df["project"] == "CORDEX"]["model"]:
         if any([s in c for s in ['RACMO22E', 'ALADIN', 'HadREM3']]):
             aerosol_model_list.append(c)
 
@@ -308,43 +342,22 @@ def main():
 
     # List of CPM drivers from CORDEX to know which to plot as triangles
     cpm_driver_list = []
-    for n in cpm.index:
+    for n in plot_df[plot_df["project"] == "cordex-cpm"]["model"]:
         cpm_driver_list.append(cpm_drivers[n.split()[0]])
-
-    # create data frame of just CPM drivers
-    cpm_driver_df = cordex[cordex.index.isin(cpm_driver_list)]
-    # create subset of models from case study
-    case_study_df = cordex[cordex.index.isin(case_study_model_list)]
 
     # CMIP5 CORDEX drivers can be inferred directly from CORDEX model names
     cordex_driver_list = list(
         set(
-            [plotting.remove_institute_from_driver(n.split(' ')[1]) for n in cordex.index]
+            [plotting.remove_institute_from_driver(n.split(' ')[1]) for n in plot_df[plot_df["project"] == "CORDEX"]["model"]]
         )
     )
-    cordex_driver_df = cmip5[cmip5.index.isin(cordex_driver_list)]
 
-    # chuck everything in a dataframe for plotting
-    df_dict = {
-            "CMIP6": cmip6[0],
-            "CMIP5": cmip5[0],
-            "CORDEX Drivers": cordex_driver_df[0],
-            "CORDEX": cordex[0],
-            "CPM Drivers": cpm_driver_df[0],
-            "Case study models": case_study_df[0],
-            "UKCP_GCM": ukcp_g[0],
-            "UKCP_RCM": ukcp_r[0],
-            "UKCP Drivers": ukcp_g[ukcp_g.index.isin(ukcp_r.index)][0],
-        }
-    
-    if not cpm.empty:
-        df_dict["CPM"] = cpm[0]
-
-    plot_df = pd.DataFrame(df_dict)
-
-    # add case study models if using
-    if case_study_model_list:
-        plot_df["Case study models"] = case_study_df[0]
+    driving_models = {
+        "CORDEX": cordex_driver_list,
+        "CPM": cpm_driver_list,
+        "UKCP": list(plot_df[plot_df["project"] == "UKCP18 land-rcm"]["model"]),
+        "case study": case_study_model_list
+    }
 
     # load WP2 atlas constraint data
     constraint_data = {}
@@ -356,21 +369,26 @@ def main():
 
     # now plot
     # panel plot
-    plotting.panel_boxplot(plot_df, constraint_data, area, season, var)
+    plotting.panel_boxplot(plot_df, constraint_data, driving_models, area, season, var)
 
     # scatter plot
     # need to prepare data
-    cmip_x, cordex_y, cordex_labels = plotting.prepare_scatter_data(
-        plot_df["CORDEX Drivers"].dropna().to_dict(), plot_df["CORDEX"].dropna().to_dict(), "CORDEX"
-        )
+    x = plot_df[(plot_df["model"].isin(driving_models["CORDEX"])) & (plot_df["data type"] == "standard")][["model", "value"]]
+    x = pd.Series(x.value.values, index=x.model).to_dict()
+    y = plot_df[(plot_df["project"] == "CORDEX") & (plot_df["data type"] == "standard")][["model", "value"]]
+    y = pd.Series(y.value.values, index=y.model).to_dict()
+    cmip_x, cordex_y, cordex_labels = plotting.prepare_scatter_data(x, y, "CORDEX")
 
-    if not cpm.empty:
-        cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(
-            plot_df["CPM Drivers"].dropna().to_dict(), plot_df["CPM"].dropna().to_dict(), "CPM"
-        )
+    if len(driving_models["CPM"]) > 0:
+        x = plot_df[(plot_df["model"].isin(driving_models["CPM"])) & (plot_df["data type"] == "standard")][["model", "value"]]
+        x = pd.Series(x.value.values, index=x.model).to_dict()
+        y = plot_df[(plot_df["project"] == "cordex-cpm") & (plot_df["data type"] == "standard")][["model", "value"]]
+        y = pd.Series(y.value.values, index=y.model).to_dict()
+        cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(x, y, "CPM")
         plotting.mega_scatter(
             cmip_x, cordex_y, cordex_x, cpm_y,
-            plot_df["CMIP5"].dropna().to_list(), plot_df["CORDEX"].dropna().to_list(),
+            plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"].to_list(),
+            plot_df[(plot_df["project"] == "CORDEX") & (plot_df["data type"] == "standard")]["value"].to_list(),
             cordex_labels, cpm_labels, f"{area.attributes['NAME']} {season} {var}",
             "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
         )
