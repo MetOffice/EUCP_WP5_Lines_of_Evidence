@@ -302,7 +302,7 @@ def main(cfg):
                     anoms = get_anomalies(domains[dom], rel_change)
                     projections[proj_key][m][dom] = anoms
                 if proj_key not in model_lists:
-                        model_lists[proj_key] = []
+                    model_lists[proj_key] = []
                 model_lists[proj_key].append(f"{dom} {m}")
             else:
                 logging.info(f"Calculating anomalies for {proj} {m}")
@@ -419,53 +419,55 @@ def main(cfg):
                 )
 
         # now make panel plots for the mean data
-        scon = iris.Constraint(season_number=s)
-        logging.info(f'Making {seasons[s]} panel plot')
-        plt.figure(figsize=(12.8, 9.6))
-        # plots should include. All CMIP5, CORDEX drivers, CORDEX, CPM drivers, CPM.
-        ax = plt.subplot(331, projection=ccrs.PlateCarree())
-        cmesh = plot_map(projections['CMIP5']['mean'].extract(scon), extent, var, ax)
-        plt.title('CMIP5')
+        # only if we have CPM data though
+        if 'cordex-cpm' in projections:
+            scon = iris.Constraint(season_number=s)
+            logging.info(f'Making {seasons[s]} panel plot')
+            plt.figure(figsize=(12.8, 9.6))
+            # plots should include. All CMIP5, CORDEX drivers, CORDEX, CPM drivers, CPM.
+            ax = plt.subplot(331, projection=ccrs.PlateCarree())
+            cmesh = plot_map(projections['CMIP5']['mean'].extract(scon), extent, var, ax)
+            plt.title('CMIP5')
 
-        ax = plt.subplot(334, projection=ccrs.PlateCarree())
-        plot_map(projections['CORDEX_drivers']['mean'].extract(scon), extent, var, ax)
-        plt.title('CORDEX driving models')
+            ax = plt.subplot(334, projection=ccrs.PlateCarree())
+            plot_map(projections['CORDEX_drivers']['mean'].extract(scon), extent, var, ax)
+            plt.title('CORDEX driving models')
 
-        ax = plt.subplot(335, projection=ccrs.PlateCarree())
-        plot_map(projections['CORDEX']['mean'].extract(scon), extent, var, ax)
-        plt.title('CORDEX')
+            ax = plt.subplot(335, projection=ccrs.PlateCarree())
+            plot_map(projections['CORDEX']['mean'].extract(scon), extent, var, ax)
+            plt.title('CORDEX')
 
-        # plot diff of CORDEX to CMIP
-        ax = plt.subplot(336, projection=ccrs.PlateCarree())
-        cmesh_diff = plot_map(projections['CORDEX']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
-        plt.title('CORDEX - CMIP5 diff')
+            # plot diff of CORDEX to CMIP
+            ax = plt.subplot(336, projection=ccrs.PlateCarree())
+            cmesh_diff = plot_map(projections['CORDEX']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
+            plt.title('CORDEX - CMIP5 diff')
 
-        ax = plt.subplot(337, projection=ccrs.PlateCarree())
-        plot_map(projections['CPM_drivers']['mean'].extract(scon), extent, var, ax)
-        plt.title('CPM driving models')
+            ax = plt.subplot(337, projection=ccrs.PlateCarree())
+            plot_map(projections['CPM_drivers']['mean'].extract(scon), extent, var, ax)
+            plt.title('CPM driving models')
 
-        ax = plt.subplot(338, projection=ccrs.PlateCarree())
-        plot_map(projections['cordex-cpm']['mean'].extract(scon), extent, var, ax)
-        plt.title('CPM')
+            ax = plt.subplot(338, projection=ccrs.PlateCarree())
+            plot_map(projections['cordex-cpm']['mean'].extract(scon), extent, var, ax)
+            plt.title('CPM')
 
-        # plot diff of CPM to CORDEX
-        ax = plt.subplot(339, projection=ccrs.PlateCarree())
-        plot_map(projections['cordex-cpm']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
-        plt.title('CPM - CORDEX diff')
+            # plot diff of CPM to CORDEX
+            ax = plt.subplot(339, projection=ccrs.PlateCarree())
+            plot_map(projections['cordex-cpm']['diff_rg'].extract(scon), extent, f'{var}_diff', ax)
+            plt.title('CPM - CORDEX diff')
 
-        # add legends
-        ax = plt.subplot(332)
-        ax.axis("off")
-        plt.colorbar(cmesh, orientation="horizontal")
+            # add legends
+            ax = plt.subplot(332)
+            ax.axis("off")
+            plt.colorbar(cmesh, orientation="horizontal")
 
-        ax = plt.subplot(333)
-        ax.axis("off")
-        plt.colorbar(cmesh_diff, orientation="horizontal")
+            ax = plt.subplot(333)
+            ax.axis("off")
+            plt.colorbar(cmesh_diff, orientation="horizontal")
 
-        plt.suptitle(f'{seasons[s]} {var} change')
-        plt.savefig(
-            f"{cfg['plot_dir']}/{seasons[s]}/all_means_map_{seasons[s]}.png"
-        )
+            plt.suptitle(f'{seasons[s]} {var} change')
+            plt.savefig(
+                f"{cfg['plot_dir']}/{seasons[s]}/all_means_map_{seasons[s]}.png"
+            )
 
     # print all datasets used
     print("Input models for plots:")

@@ -142,27 +142,29 @@ def load_wp2_glen(var, area, season):
     return results
 
 
-def load_esmval_gridded_data(recipe, type, area, season):
+def load_esmval_gridded_data(recipe, type, area, season, use_lsm=True):
     # load gridded anomaly data that has been produced by the ESMValTool recipe
     # recipe: name of recipe run that contains data, e.g. recipe_GCM_and_RCM_pan_EU_20211214_170431
     # type: type of data to load, e.g. cmip5, cmip6, cordex, cpm, UKCP18 land-gcm, UKCP18 land-rcm
     # area: area to compute area averages for. As a shape file for now..
     # season: season to load data for, djf, mam, jja or son
+    # use_lsm: apply Land sea mask to mask out ocean
     # return an array of the computed area means for each data file (model) found
 
     # first get path to where all the files will be
     season = season.upper()
     input_path = f"/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/esmvaltool_output/{recipe}/work/gridded_anoms/main/{season}/"
 
-    # setup land mask shape
-    lsm = shape.load_shp(
-        '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/ne_110m_land/ne_110m_land.shp'
-        ).unary_union()
-    # need to reduce size of lsm to avoid bug in ascend
-    # see https://github.com/MetOffice/ascend/issues/8
-    corners = [(-30, 20), (-30, 75), (50, 75), (50, 20)]
-    rectangle = shape.create(corners, {'shape': 'rectangle'}, 'Polygon')
-    lsm = lsm.intersection(rectangle)
+    if use_lsm:
+        # setup land mask shape
+        lsm = shape.load_shp(
+            '/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/ne_110m_land/ne_110m_land.shp'
+            ).unary_union()
+        # need to reduce size of lsm to avoid bug in ascend
+        # see https://github.com/MetOffice/ascend/issues/8
+        corners = [(-30, 20), (-30, 75), (50, 75), (50, 20)]
+        rectangle = shape.create(corners, {'shape': 'rectangle'}, 'Polygon')
+        lsm = lsm.intersection(rectangle)
 
     # process each file for the required datatype
     fnames = glob(f"{input_path}/{type}_*.nc")
@@ -188,13 +190,13 @@ def load_esmval_gridded_data(recipe, type, area, season):
             print(f"WARNING: Data in {os.path.basename(fname)} only covers {area_cov * 100}% of supplied area")
 
         # now mask data
-        # TODO - maybe turn whether / how to do this into an argument..
         # could also achieve maskng via preprocessor functions from esmvaltool 
         # if it is necesary to run this outside the met office where ascend is not available
-        mask = lsm.intersection(area)
-        mask.mask_cube_inplace(cube)
-        # need some sort of logic to test if the cube contains data for all of the supplied area,
-        # if not we should reject it...
+        if use_lsm:
+            mask = lsm.intersection(area)
+            mask.mask_cube_inplace(cube)
+        else:
+            mask = area
 
         # and compute weighted area average
         # this is using weighted area weights from Ascend
@@ -260,16 +262,21 @@ def main():
 
     if area == "boe":
         area = shape.create([(-5,42), (30,42), (30,52), (-5,52)], {'shape': 'rectangle', 'NAME': 'boe'}, 'Polygon')
+        use_lsm = True
+    elif area == "berthou":
+        area = shape.create([(-12,49), (21,49), (21,59), (-12,59)], {'shape': 'rectangle', 'NAME': 'berthou'}, 'Polygon')
+        use_lsm = False
     else:
         print(f"Loading {area} shape")
         area = shape.load_shp('/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp', name=area)[0]
+        use_lsm = True
 
     # read data and place in a dataframe
     plot_df = pd.DataFrame(columns=["model", "value", "project", "data type"])
 
     # easiest way seems to be to append a row at a time
     for proj in ["CMIP5", "CMIP6", "CORDEX", "cordex-cpm", "UKCP18 land-gcm", "UKCP18 land-rcm"]:
-        data_dict = load_esmval_gridded_data(recipe, proj, area, season)
+        data_dict = load_esmval_gridded_data(recipe, proj, area, season, use_lsm)
         for k, v in data_dict.items():
             row = [k, v, proj, "standard"]
             plot_df.loc[len(plot_df)] = row
@@ -288,6 +295,8 @@ def main():
             else:
                 proj = p
             m_val = plot_df[(plot_df["model"] == row[1][0]) & (plot_df["project"] == proj)]["value"].values
+            if len(m_val) == 0:
+                continue
             if len(m_val) > 1:
                 raise ValueError(f"Found multiple entries for {row[1][0]}")
 
@@ -360,16 +369,26 @@ def main():
     }
 
     # load WP2 atlas constraint data
-    constraint_data = {}
-    for m in plotting.WP2_METHODS.keys():
-        constraint_data[m] = load_wp2_atlas(m, var, area, season)
+    if area.attributes["NAME"] == "berthou":
+        constraint_data = None
+    else:    
+        constraint_data = {}
+        for m in plotting.WP2_METHODS.keys():
+            constraint_data[m] = load_wp2_atlas(m, var, area, season)
 
-    # also load Glen's UKCP data
-    constraint_data["UKMO_CMIP6_UKCP"] = load_wp2_glen(var, area, season)
+        # also load Glen's UKCP data
+        constraint_data["UKMO_CMIP6_UKCP"] = load_wp2_glen(var, area, season)
 
     # now plot
     # panel plot
-    plotting.panel_boxplot(plot_df, constraint_data, driving_models, area, season, var)
+    if len(case_study_model_list) > 0:
+        case_study = True
+    else:
+        case_study = False
+    plotting.panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, case_study)
+
+    # change per degrees of warming plot
+    plotting.relative_to_global_plot(plot_df, area, season, var)
 
     # scatter plot
     # need to prepare data
@@ -378,6 +397,10 @@ def main():
     y = plot_df[(plot_df["project"] == "CORDEX") & (plot_df["data type"] == "standard")][["model", "value"]]
     y = pd.Series(y.value.values, index=y.model).to_dict()
     cmip_x, cordex_y, cordex_labels = plotting.prepare_scatter_data(x, y, "CORDEX")
+    if case_study_model_list == []:
+        title = f"{area.attributes['NAME']} {season} {var}"
+    else:
+        title = f"{area.attributes['NAME']} {season} {var}_cs"
 
     if len(driving_models["CPM"]) > 0:
         x = plot_df[(plot_df["model"].isin(driving_models["CPM"])) & (plot_df["data type"] == "standard")][["model", "value"]]
@@ -389,13 +412,13 @@ def main():
             cmip_x, cordex_y, cordex_x, cpm_y,
             plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"].to_list(),
             plot_df[(plot_df["project"] == "CORDEX") & (plot_df["data type"] == "standard")]["value"].to_list(),
-            cordex_labels, cpm_labels, f"{area.attributes['NAME']} {season} {var}",
+            cordex_labels, cpm_labels, title,
             "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
         )
     else:
         plotting.simpler_scatter(
             cmip_x, cordex_y, cordex_labels,
-            f"{area.attributes['NAME']} {season} {var}",
+            title,
             "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
         )
 

@@ -193,6 +193,10 @@ def simpler_scatter(drive_data, downscale_data, labels, title, plot_path):
     ax_datasets.set_xticks(range(1, 3))
     ax_datasets.set_xticklabels(['Global', 'Regional'])
 
+    # legend
+    h, l = ax_scatter.get_legend_handles_labels()
+    ax_scatter.legend(h, l, bbox_to_anchor=(1.05, 1.0), loc='upper left', fontsize=10)
+
     # also plot individual dots for each model..
     if PLOT_FN == coloured_violin:
         plot_points(drive_data, 1, ax_datasets, color='r')
@@ -331,7 +335,7 @@ def create_x_points(ys, basex, offset):
     return xs
 
 
-def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, anoms_data=None, case_study=False):
+def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, case_study=False):
     # set colours
     colour_map = {
         "CMIP6": "tab:blue",
@@ -345,6 +349,8 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
     # create figure and axes
     if case_study:
         f, axs = plt.subplots(1,4, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4, 1]})
+    elif constraint_data == None:
+        f, axs = plt.subplots(1,2, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 3]})
     else:
         f, axs = plt.subplots(1,3, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4]})
     # f.suptitle("Projected % change in summer (JJA) rainfall for Romania. 2041-2060 vs 1995-2014. RCP8.5/ssp585")
@@ -358,25 +364,34 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
     # plot boxes with matplotlib
     cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "standard")]["value"]
     cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"]
-    UCKP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "standard")]["value"]
-    box_plot([cmip6, cmip5, UCKP], axs[0], "black", "None", [-0.2, 0.8, 1.8], [0.25, 0.25, 0.25])
+    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "standard")]["value"]
+    plot_data = [cmip6, cmip5]
+    positions = [0, 1]
+    widths = [0.25, 0.25]
+    order = ["CMIP6", "CMIP5"]
+    if len(UKCP) > 0:
+        plot_data.append(UKCP)
+        positions.append(2)
+        widths.append(0.25)
+        order.append("UKCP18 land-gcm")
+    box_plot(plot_data, axs[0], "black", "None", positions, widths)
 
-    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
-    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
-    UCKP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
-    box_plot([cmip6, cmip5, UCKP], axs[0], "black", "None", [0.2, 1.2, 2.2], [0.25, 0.25, 0.25])
+    # cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
+    # cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
+    # UCKP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
+    # box_plot([cmip6, cmip5, UCKP], axs[0], "black", "None", [0.2, 1.2, 2.2], [0.25, 0.25, 0.25])
 
     # plot dots
-    plot_data = plot_df[plot_df["project"].isin(["CMIP6", "CMIP5", "UKCP18 land-gcm"])]
+    gcm_projects = ["CMIP6", "CMIP5", "UKCP18 land-gcm"]
+    plot_data = plot_df.query("(project in @gcm_projects) &  (`data type` == 'standard')")
     sns.swarmplot(
         x="project",
         y="value",
-        hue="data type",
         data=plot_data, ax=axs[0],
-        size=swarm_size, palette=["tab:olive", "tab:red"],
+        size=swarm_size, palette=["tab:blue", "tab:orange", "tab:purple"],
         alpha=0.75,
         dodge=True,
-        order=["CMIP6", "CMIP5", "UKCP18 land-gcm"]
+        order=order
         )
 
     # last bits of formatting
@@ -385,20 +400,23 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
     axs[0].set_title("GCMs")
 
     # plot constrained ranges. 2nd panel
-    axs[1].clear()
-    for i, k in enumerate(constraint_data.keys()):
-        colour = colour_map[WP2_METHODS[k]]
-        # constrained
-        bxp([constraint_data[k][0]], axs[1], colour, 0.75, [i], 0.375)
-        # unconstrained
-        bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
+    if constraint_data is not None:
+        for i, k in enumerate(constraint_data.keys()):
+            colour = colour_map[WP2_METHODS[k]]
+            # constrained
+            bxp([constraint_data[k][0]], axs[1], colour, 0.75, [i], 0.375)
+            # unconstrained
+            bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
 
-    axs[1].axhline(linestyle=":", color="k", alpha=0.5)
-    plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
-    axs[1].set_title("Uncertainty estimates\nfrom GCMs and observations")
+        axs[1].axhline(linestyle=":", color="k", alpha=0.5)
+        plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
+        axs[1].set_title("Uncertainty estimates\nfrom GCMs and observations")
 
-    # third panel downscaled information
-    axs[2].clear()
+        ax_num = 2
+    else:
+        ax_num = 1
+
+    # next panel downscaled information
     if len(driving_models['CPM']) > 0:
         projects = ["CMIP5", "CORDEX", "cordex-cpm", "UKCP18 land-gcm", "UKCP18 land-rcm"]
         palette = ["tab:orange", "tab:green", "tab:red", "tab:purple", "tab:purple"]
@@ -410,26 +428,26 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
         x="project",
         y="value",
         data=data,
-        ax=axs[2],
+        ax=axs[ax_num],
         size=swarm_size,
         palette=palette
     )
     # CORDEX drivers
     y = plot_df[(plot_df["model"].isin(driving_models["CORDEX"])) & (plot_df["data type"] == "standard")]["value"]
     x = create_x_points(y, 0.5, 0.05)
-    axs[2].scatter(x, y, color="tab:orange", marker=">", s=50)
+    axs[ax_num].scatter(x, y, color="tab:orange", marker=">", s=50)
 
     if len(driving_models['CPM']) > 0:
         # CPM drivers
         y = plot_df[(plot_df["model"].isin(driving_models["CPM"])) & (plot_df["data type"] == "standard")]["value"]
         x = create_x_points(y, 1.5, 0.05)
-        axs[2].scatter(x, y, color="tab:green", marker=">", s=50)
+        axs[ax_num].scatter(x, y, color="tab:green", marker=">", s=50)
         ukcp_div = 2.5
     else:
         ukcp_div = 1.5
 
     # Divider line for UKCP
-    axs[2].axvline(ukcp_div, color="lightgrey")
+    axs[ax_num].axvline(ukcp_div, color="lightgrey")
 
     # UKCP drivers
     y = plot_df[
@@ -438,29 +456,30 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
             (plot_df["project"] == "UKCP18 land-gcm")
         ]["value"]
     x = create_x_points(y, ukcp_div+1, 0.05)
-    axs[2].scatter(x, y, color="tab:purple", marker=">", s=50)
+    axs[ax_num].scatter(x, y, color="tab:purple", marker=">", s=50)
 
     # Final formatting etc.
-    axs[2].axhline(linestyle=":", color="k", alpha=0.5)
-    plt.setp(axs[2].get_xticklabels(), rotation=45, ha="right")
-    axs[2].set_title("Downscaled Projections")
+    axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
+    plt.setp(axs[ax_num].get_xticklabels(), rotation=45, ha="right")
+    axs[ax_num].set_title("Downscaled Projections")
+    ax_num = ax_num + 1
 
     # extra panel if a case study
     if len(driving_models['case study']) > 0:
-        axs[3].clear()
-        data = plot_df[(plot_df["model"].isin(driving_models["case study"])) & (plot_df["data type"] == "standard")]["value"]
+        cs_models = driving_models["case study"]
+        other_model_data = plot_df.query("(model not in @cs_models) & (project == 'CORDEX')")["value"]
+        cs_model_data = plot_df.query("(model in @cs_models) & (project == 'CORDEX')")["value"]
+        # do as from study1 and from study2.. i.e. seperate cordex to aerosol and non aerosol and then plot both in this panel
         sns.swarmplot(
-            x="project",
-            y="value",
-            data=data,
-            ax=axs[3],
+            data=[other_model_data, cs_model_data],
+            ax=axs[ax_num],
             size=swarm_size,
             palette=["tab:green"]
             )
-        axs[3].set_xticklabels(["Case study models"])
-        axs[3].axhline(linestyle=":", color="k", alpha=0.5)
-        plt.setp(axs[3].get_xticklabels(), rotation=45, ha="right")
-        axs[3].set_title("From study")
+        axs[ax_num].set_xticklabels(["Non case study models", "Case study models"])
+        axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
+        plt.setp(axs[ax_num].get_xticklabels(), rotation=45, ha="right")
+        axs[ax_num].set_title("From study")
 
     # Final figure spacing etc.
     # axs[0].set_ylabel("%")
@@ -471,4 +490,55 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, a
     # save plot
     save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
     plt.savefig(f"{save_path}/{area.attributes['NAME']}_{season}_{var}.png")
+    plt.close()
+
+def relative_to_global_plot(plot_df, area, season, var):
+    # plot changes relative to model global warming
+    f, ax = plt.subplots(1, 1, figsize=[19.2 ,  9.77])
+
+    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "standard")]["value"]
+    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"]
+    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "standard")]["value"]
+    plot_data = [cmip6, cmip5]
+    positions = [-0.2, 0.8]
+    widths = [0.25, 0.25]
+    order = ["CMIP6", "CMIP5"]
+
+    if len(UKCP) > 0:
+        plot_data.append(UKCP)
+        positions.append(1.8)
+        widths.append(0.25)
+        order.append("UKCP18 land-gcm")
+    box_plot(plot_data, ax, "black", "None", positions, widths)
+
+    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
+    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
+    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
+    plot_data = [cmip6, cmip5]
+
+    if len(UKCP) > 0:
+        plot_data.append(UKCP)
+    positions = [p + 0.4 for p in positions]
+    box_plot(plot_data, ax, "black", "None", positions, widths)
+
+    # size of dots in swarm plots
+    swarm_size = 7
+
+    # plot dots
+    plot_data = plot_df[plot_df["project"].isin(["CMIP6", "CMIP5", "UKCP18 land-gcm"])]
+    sns.swarmplot(
+        x="project",
+        y="value",
+        hue="data type",
+        data=plot_data, ax=ax,
+        size=swarm_size, palette=["tab:olive", "tab:red"],
+        alpha=0.75,
+        dodge=True,
+        order=order
+        )
+
+    # save plot
+    save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+    plt.suptitle(f"{area.attributes['NAME']} {season} {var}")
+    plt.savefig(f"{save_path}/relative_to_global_{area.attributes['NAME']}_{season}_{var}.png")
     plt.close()

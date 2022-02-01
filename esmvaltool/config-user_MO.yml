@@ -2,10 +2,6 @@
 # User's configuration file for the ESMValTool
 ###############################################################################
 ---
-# Diagnostics create plots? [true]/false
-write_plots: true
-# Diagnostics write NetCDF files? [true]/false
-write_netcdf: true
 # Set the console log level debug, [info], warning, error
 log_level: info
 # Exit on warning (only for NCL diagnostic scripts)? true/[false]
@@ -50,7 +46,7 @@ rootpath:
   non-cordex-rcm: /project/applied/Data/non-cordex-rcm/
   non-cmip5-gcm: /project/applied/Data/non-cmip5-gcm/
   UKCP18: /project/ciid/projects/EUCP/wp5/UKCP18/
-  native6: /home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/observations
+  native6: /home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/observations/
 
 # Directory structure for input data: [default]/BADC/DKRZ/ETHZ/etc
 # See config-developer.yml for definitions.
