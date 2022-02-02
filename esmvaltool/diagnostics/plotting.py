@@ -8,8 +8,11 @@ from cycler import cycler
 WP2_METHODS = {
     "ETHZ_CMIP6_ClimWIP": "CMIP6",
     "ICTP_CMIP6_REA": "CMIP6",
+    "CNRM_CMIP6_KCC": "CMIP6",
+    "UEdin_CMIP6_ASK": "CMIP6",
     "ICTP_CMIP5_REA": "CMIP5",
-    "UKMO_CMIP6_UKCP": "UKCP_GCM"
+    "UOxf_CMIP5_CALL": "CMIP5",
+    "UKMO_CMIP6_UKCP": "UKCP_GCM",
 }
 
 
@@ -348,11 +351,11 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
     plt.rcParams.update({'font.size': 14})
     # create figure and axes
     if case_study:
-        f, axs = plt.subplots(1,4, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4, 1]})
+        f, axs = plt.subplots(1,4, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [2, 3, 4, 1]})
     elif constraint_data == None:
         f, axs = plt.subplots(1,2, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 3]})
     else:
-        f, axs = plt.subplots(1,3, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [3, 2, 4]})
+        f, axs = plt.subplots(1,3, sharey=True, figsize=[19.2 ,  9.77], gridspec_kw={'width_ratios': [2, 3, 4]})
     # f.suptitle("Projected % change in summer (JJA) rainfall for Romania. 2041-2060 vs 1995-2014. RCP8.5/ssp585")
     # size of dots in swarm plots
     swarm_size = 7
@@ -376,11 +379,6 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
         order.append("UKCP18 land-gcm")
     box_plot(plot_data, axs[0], "black", "None", positions, widths)
 
-    # cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
-    # cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
-    # UCKP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
-    # box_plot([cmip6, cmip5, UCKP], axs[0], "black", "None", [0.2, 1.2, 2.2], [0.25, 0.25, 0.25])
-
     # plot dots
     gcm_projects = ["CMIP6", "CMIP5", "UKCP18 land-gcm"]
     plot_data = plot_df.query("(project in @gcm_projects) &  (`data type` == 'standard')")
@@ -398,6 +396,13 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
     axs[0].axhline(linestyle=":", color="k", alpha=0.5)
     plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right")
     axs[0].set_title("GCMs")
+    if var == 'pr':
+        y_lab = '%'
+    elif var == 'tas':
+        y_lab = 'K'
+    else:
+        raise ValueError(f"Unsupported variable {var}")
+    axs[0].set_ylabel(y_lab)
 
     # plot constrained ranges. 2nd panel
     if constraint_data is not None:
@@ -406,7 +411,8 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
             # constrained
             bxp([constraint_data[k][0]], axs[1], colour, 0.75, [i], 0.375)
             # unconstrained
-            bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
+            if len(constraint_data[k]) == 2:
+                bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
 
         axs[1].axhline(linestyle=":", color="k", alpha=0.5)
         plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
@@ -496,42 +502,31 @@ def relative_to_global_plot(plot_df, area, season, var):
     # plot changes relative to model global warming
     f, ax = plt.subplots(1, 1, figsize=[19.2 ,  9.77])
 
-    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "standard")]["value"]
-    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"]
-    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "standard")]["value"]
+    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
+    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
+    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
     plot_data = [cmip6, cmip5]
-    positions = [-0.2, 0.8]
+    positions = [0, 1]
     widths = [0.25, 0.25]
     order = ["CMIP6", "CMIP5"]
 
     if len(UKCP) > 0:
         plot_data.append(UKCP)
-        positions.append(1.8)
+        positions.append(2)
         widths.append(0.25)
         order.append("UKCP18 land-gcm")
-    box_plot(plot_data, ax, "black", "None", positions, widths)
-
-    cmip6 = plot_df[(plot_df["project"] == "CMIP6") & (plot_df["data type"] == "weighted")]["value"]
-    cmip5 = plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "weighted")]["value"]
-    UKCP = plot_df[(plot_df["project"] == "UKCP18 land-gcm") & (plot_df["data type"] == "weighted")]["value"]
-    plot_data = [cmip6, cmip5]
-
-    if len(UKCP) > 0:
-        plot_data.append(UKCP)
-    positions = [p + 0.4 for p in positions]
     box_plot(plot_data, ax, "black", "None", positions, widths)
 
     # size of dots in swarm plots
     swarm_size = 7
 
     # plot dots
-    plot_data = plot_df[plot_df["project"].isin(["CMIP6", "CMIP5", "UKCP18 land-gcm"])]
+    plot_data = plot_df.query("project in @order & `data type` == 'weighted'")
     sns.swarmplot(
         x="project",
         y="value",
-        hue="data type",
         data=plot_data, ax=ax,
-        size=swarm_size, palette=["tab:olive", "tab:red"],
+        size=swarm_size, palette=["tab:blue", "tab:orange", "tab:purple"],
         alpha=0.75,
         dodge=True,
         order=order

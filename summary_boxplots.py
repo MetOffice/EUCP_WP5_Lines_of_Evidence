@@ -52,6 +52,11 @@ def load_wp2_atlas(method, var, area, season):
 
     bxp_obs = []
     for data in ["cons", "uncons"]:
+        # do not load uncons data for CALL or ASK methods
+        if data == "uncons":
+            if any(m in method for m in ["ASK", "CALL"]):
+                continue
+
         fname = f"{base_path}/atlas_EUCP_{method}_{data}_{var}.nc"
         cube = iris.load_cube(fname)
 
@@ -374,7 +379,11 @@ def main():
     else:    
         constraint_data = {}
         for m in plotting.WP2_METHODS.keys():
-            constraint_data[m] = load_wp2_atlas(m, var, area, season)
+            try:
+                constraint_data[m] = load_wp2_atlas(m, var, area, season)
+            except OSError:
+                # Skip method if not available
+                continue
 
         # also load Glen's UKCP data
         constraint_data["UKMO_CMIP6_UKCP"] = load_wp2_glen(var, area, season)
