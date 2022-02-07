@@ -2,8 +2,7 @@
 # needs to run from a scitools environment.
 # Currently working with: /net/project/ukmo/scitools/opt_scitools/environments/default/2021_03_18-1/bin/python
 
-# doms=('ALP-3' 'CEE-3' 'CEU-3' 'NEU-3' 'NWE-3' 'SEE-3' 'SWE-3' 'boe' 'Scotland' '"United Kingdom"' 'Romania')
-doms=('Romania')
+doms=('ALP-3' 'CEE-3' 'CEU-3' 'NEU-3' 'NWE-3' 'SEE-3' 'SWE-3' 'boe' 'Scotland' '"United Kingdom"' 'Romania')
 # doms=('berthou')
 seas=('JJA' 'DJF')
 vars=('pr' 'tas')
@@ -22,7 +21,7 @@ for dom in "${doms[@]}"; do
     fi
     for sea in "${seas[@]}"; do
         for var in "${vars[@]}"; do
-            sbatch -t 5 -n 2 --mem=4G --wrap="python summary_boxplots.py recipe_GCM_and_RCM_pan_EU_20220207_101326 ${var} ${sea} recipe_GCM_global_tas_20220121_172015 ${dom} --shape_file=${SFILE}"
+            sbatch -t 2 -n 2 --mem=4G --wrap="python summary_boxplots.py recipe_GCM_and_RCM_pan_EU_20220207_101326 ${var} ${sea} recipe_GCM_global_tas_20220121_172015 ${dom} --shape_file=${SFILE}"
         done
     done
 done

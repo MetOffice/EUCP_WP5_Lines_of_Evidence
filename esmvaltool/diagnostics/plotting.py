@@ -315,7 +315,7 @@ def create_x_points(ys, basex, offset):
     return xs
 
 
-def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, case_study=False):
+def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, save_path, case_study=False):
     # set colours
     colour_map = {
         "CMIP6": "tab:blue",
@@ -483,11 +483,11 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
     plt.subplots_adjust(bottom=0.18, wspace=0.06)
 
     # save plot
-    save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
     plt.savefig(f"{save_path}/{area.attributes['NAME']}_{season}_{var}.png")
     plt.close()
 
-def relative_to_global_plot(plot_df, area, season, var):
+
+def relative_to_global_plot(plot_df, area, season, var, save_path):
     # plot changes relative to model global warming
     f, ax = plt.subplots(1, 1, figsize=[19.2 ,  9.77])
 
@@ -525,7 +525,6 @@ def relative_to_global_plot(plot_df, area, season, var):
         ax.axhline(ls=':', color='k', alpha=0.75)
 
     # save plot
-    save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
     plt.suptitle(f"{area.attributes['NAME']} {season} {var}")
     plt.savefig(f"{save_path}/relative_to_global_{area.attributes['NAME']}_{season}_{var}.png")
     plt.close()

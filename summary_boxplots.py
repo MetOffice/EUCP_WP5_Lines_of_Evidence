@@ -11,6 +11,8 @@ import argparse
 from esmvaltool.diagnostics import plotting
 # works in SCITOOLS Default/next (2021-03-18)
 
+PLOT_PATH = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+DATA_PATH = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plot_data"
 
 def mask_wp2_atlas_data(cube, shp):
     # mask wp2 data using shape file
@@ -397,10 +399,13 @@ def main():
         case_study = True
     else:
         case_study = False
-    plotting.panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, case_study)
+    plotting.panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, PLOT_PATH, case_study)
 
     # change per degrees of warming plot
-    plotting.relative_to_global_plot(plot_df, area, season, var)
+    plotting.relative_to_global_plot(plot_df, area, season, var, PLOT_PATH)
+
+    # also output dataframe of source data for plots
+    plot_df.to_csv(f"{DATA_PATH}/{area.attributes['NAME']}_{season}_{var}.csv", index=False)
 
     # scatter plot
     # need to prepare data
@@ -423,13 +428,13 @@ def main():
         plotting.mega_scatter(
             cmip_x, cordex_y, cordex_x, cpm_y,
             cordex_labels, cpm_labels, title,
-            "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+            PLOT_PATH
         )
     else:
         plotting.simpler_scatter(
             cmip_x, cordex_y, cordex_labels,
             title,
-            "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
+            PLOT_PATH
         )
 
 
