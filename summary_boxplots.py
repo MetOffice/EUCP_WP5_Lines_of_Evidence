@@ -147,10 +147,11 @@ def load_wp2_glen(var, area, season):
     return results
 
 
-def load_esmval_gridded_data(recipe, type, area, season, use_lsm=True):
+def load_esmval_gridded_data(recipe, var, proj, area, season, use_lsm=True):
     # load gridded anomaly data that has been produced by the ESMValTool recipe
     # recipe: name of recipe run that contains data, e.g. recipe_GCM_and_RCM_pan_EU_20211214_170431
-    # type: type of data to load, e.g. cmip5, cmip6, cordex, cpm, UKCP18 land-gcm, UKCP18 land-rcm
+    # variable: tas or pr
+    # proj: type of data to load, e.g. cmip5, cmip6, cordex, cpm, UKCP18 land-gcm, UKCP18 land-rcm
     # area: area to compute area averages for. As a shape file for now..
     # season: season to load data for, djf, mam, jja or son
     # use_lsm: apply Land sea mask to mask out ocean
@@ -158,7 +159,7 @@ def load_esmval_gridded_data(recipe, type, area, season, use_lsm=True):
 
     # first get path to where all the files will be
     season = season.upper()
-    input_path = f"/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/esmvaltool_output/{recipe}/work/gridded_anoms/main/{season}/"
+    input_path = f"/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/esmvaltool_output/{recipe}/work/{var}_anoms/main/{season}/"
 
     if use_lsm:
         # setup land mask shape
@@ -172,7 +173,7 @@ def load_esmval_gridded_data(recipe, type, area, season, use_lsm=True):
         lsm = lsm.intersection(rectangle)
 
     # process each file for the required datatype
-    fnames = glob(f"{input_path}/{type}_*.nc")
+    fnames = glob(f"{input_path}/{proj}_*.nc")
 
     values = {}
 
@@ -214,7 +215,7 @@ def load_esmval_gridded_data(recipe, type, area, season, use_lsm=True):
         # get model name etc. from filename
         # want everything between the type and anom i.e.
         # type_<this bit>_anom_season.nc
-        mname = os.path.basename(fname).split(f"{type}_")[1]
+        mname = os.path.basename(fname).split(f"{proj}_")[1]
         mname = mname.split("_anom")[0]
 
         values[mname] = area_mean.data.item()
@@ -255,15 +256,17 @@ def main():
     parser.add_argument("recipe")
     parser.add_argument("variable")
     parser.add_argument("season")
-    parser.add_argument("area")
     parser.add_argument("gcm_anoms_recipe")
+    parser.add_argument("area_name")
+    parser.add_argument("--shape_file")
     args = parser.parse_args()
 
     recipe = args.recipe
     var = args.variable
     season = args.season
-    area = args.area
+    area = args.area_name
     anoms_files = f"/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/esmvaltool_output/{args.gcm_anoms_recipe}/work/global_tas_anomalies/anomalies/"
+    shp_file = args.shape_file
 
     if area == "boe":
         area = shape.create([(-5,42), (30,42), (30,52), (-5,52)], {'shape': 'rectangle', 'NAME': 'boe'}, 'Polygon')
@@ -272,8 +275,8 @@ def main():
         area = shape.create([(-12,49), (21,49), (21,59), (-12,59)], {'shape': 'rectangle', 'NAME': 'berthou'}, 'Polygon')
         use_lsm = False
     else:
-        print(f"Loading {area} shape")
-        area = shape.load_shp('/net/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/shape_files/EUCP_WP3_domains/EUCP_WP3_domains.shp', name=area)[0]
+        print(f"Loading {area} shape from {shp_file}")
+        area = shape.load_shp(shp_file, name=area)[0]
         use_lsm = True
 
     # read data and place in a dataframe
@@ -281,7 +284,7 @@ def main():
 
     # easiest way seems to be to append a row at a time
     for proj in ["CMIP5", "CMIP6", "CORDEX", "cordex-cpm", "UKCP18 land-gcm", "UKCP18 land-rcm"]:
-        data_dict = load_esmval_gridded_data(recipe, proj, area, season, use_lsm)
+        data_dict = load_esmval_gridded_data(recipe, var, proj, area, season, use_lsm)
         for k, v in data_dict.items():
             row = [k, v, proj, "standard"]
             plot_df.loc[len(plot_df)] = row
@@ -419,8 +422,6 @@ def main():
         cordex_x, cpm_y, cpm_labels = plotting.prepare_scatter_data(x, y, "CPM")
         plotting.mega_scatter(
             cmip_x, cordex_y, cordex_x, cpm_y,
-            plot_df[(plot_df["project"] == "CMIP5") & (plot_df["data type"] == "standard")]["value"].to_list(),
-            plot_df[(plot_df["project"] == "CORDEX") & (plot_df["data type"] == "standard")]["value"].to_list(),
             cordex_labels, cpm_labels, title,
             "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"
         )

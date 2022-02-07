@@ -212,7 +212,7 @@ def simpler_scatter(drive_data, downscale_data, labels, title, plot_path):
     plt.close()
 
 
-def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, labels2, title, plot_path):
+def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, labels1, labels2, title, plot_path):
     '''
     A mega plot that shows distributions and scatter plots of GCM, RCM and CPM
     GCM_sc: GCMs for first scatter
@@ -229,9 +229,8 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     plt.figure(figsize=(19.2, 14.4))
 
     # construct axes
-    ax_datasets = plt.subplot(211)
-    ax_scatter1 = plt.subplot(223)
-    ax_scatter2 = plt.subplot(224)
+    ax_scatter1 = plt.subplot(121)
+    ax_scatter2 = plt.subplot(122)
 
     # Create GCM / RCM scatter
     labelled_scatter(GCM_sc, RCM_sc1, labels1, ax_scatter1, RCM_markers=True, plot_text=False)
@@ -250,30 +249,8 @@ def mega_scatter(GCM_sc, RCM_sc1, RCM_sc2, CPM, all_GCM, all_RCM, labels1, label
     # legend information
     h1, l1 = ax_scatter1.get_legend_handles_labels()
     h2, l2 = ax_scatter2.get_legend_handles_labels()
-    ax_datasets.legend(
+    ax_scatter2.legend(
         h1 + h2, l1 + l2, bbox_to_anchor=(1.05, 1.0), loc='upper left', fontsize=10)
-
-    # create GCM / RCM / CPM violins or boxes / dots
-    # GCMs go in position 1, RCMs position 2, CPMs position 3
-    PLOT_FN(all_GCM, 1, ax_datasets, 'lightgrey')
-    PLOT_FN(all_RCM, 2, ax_datasets, 'lightgrey')
-    PLOT_FN(CPM, 3, ax_datasets, 'lightgrey')
-
-    # set x labels
-    ax_datasets.set_xticks(range(1, 4))
-    ax_datasets.set_xticklabels(['CMIP5', 'CORDEX', 'CPM'])
-
-    # also plot individual dots for each model..
-    plot_points(all_GCM, 0.8, ax_datasets)
-    plot_points(GCM_sc, 1.3, ax_datasets, color='r')
-    plot_points(RCM_sc1, 1.8, ax_datasets, color='r')
-    plot_points(RCM_sc2, 2.3, ax_datasets, color='b')
-    plot_points(CPM, 3, ax_datasets, color='b')
-
-    max_ds = max(max(all_GCM), max(RCM_sc1), max(CPM))
-    min_ds = min(min(all_GCM), min(RCM_sc1), min(CPM))
-    if min_ds < 0 < max_ds:
-        ax_datasets.axhline(ls=':', color='k', alpha=0.75)
 
     plt.suptitle(f"{title} change")
 
@@ -393,7 +370,8 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
         )
 
     # last bits of formatting
-    axs[0].axhline(linestyle=":", color="k", alpha=0.5)
+    if var=="pr":
+        axs[0].axhline(linestyle=":", color="k", alpha=0.5)
     plt.setp(axs[0].get_xticklabels(), rotation=45, ha="right")
     axs[0].set_title("GCMs")
     if var == 'pr':
@@ -403,6 +381,7 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
     else:
         raise ValueError(f"Unsupported variable {var}")
     axs[0].set_ylabel(y_lab)
+    axs[0].set_xlabel(None)
 
     # plot constrained ranges. 2nd panel
     if constraint_data is not None:
@@ -414,10 +393,13 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
             if len(constraint_data[k]) == 2:
                 bxp([constraint_data[k][1]], axs[1], colour, 0.25, [i], 0.5)
 
-        axs[1].axhline(linestyle=":", color="k", alpha=0.5)
+        if var=="pr":
+            axs[1].axhline(linestyle=":", color="k", alpha=0.5)
         plt.setp(axs[1].get_xticklabels(), rotation=45, ha="right")
         axs[1].set_title("Uncertainty estimates\nfrom GCMs and observations")
 
+        # set y axes limits
+        axs[1].set_ylim(auto=True)
         ax_num = 2
     else:
         ax_num = 1
@@ -465,9 +447,13 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
     axs[ax_num].scatter(x, y, color="tab:purple", marker=">", s=50)
 
     # Final formatting etc.
-    axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
+    if var=="pr":
+        axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
     plt.setp(axs[ax_num].get_xticklabels(), rotation=45, ha="right")
     axs[ax_num].set_title("Downscaled Projections")
+    axs[ax_num].set_xlabel(None)
+    axs[ax_num].set_ylabel(None)
+
     ax_num = ax_num + 1
 
     # extra panel if a case study
@@ -483,9 +469,12 @@ def panel_boxplot(plot_df, constraint_data, driving_models, area, season, var, c
             palette=["tab:green"]
             )
         axs[ax_num].set_xticklabels(["Non case study models", "Case study models"])
-        axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
+        if var=="pr":
+            axs[ax_num].axhline(linestyle=":", color="k", alpha=0.5)
         plt.setp(axs[ax_num].get_xticklabels(), rotation=45, ha="right")
         axs[ax_num].set_title("From study")
+        axs[ax_num].set_xlabel(None)
+        axs[ax_num].set_ylabel(None)
 
     # Final figure spacing etc.
     # axs[0].set_ylabel("%")
@@ -531,6 +520,9 @@ def relative_to_global_plot(plot_df, area, season, var):
         dodge=True,
         order=order
         )
+
+    if var=="pr":
+        ax.axhline(ls=':', color='k', alpha=0.75)
 
     # save plot
     save_path = "/home/h02/tcrocker/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/plots"

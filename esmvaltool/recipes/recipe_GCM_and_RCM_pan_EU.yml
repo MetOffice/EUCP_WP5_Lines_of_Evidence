@@ -308,28 +308,28 @@ regions:
 
 # time periods
 hist_cpm: &hist_cpm
-  start_year: 2000
-  end_year: 2009
+  start_year: 1996
+  end_year: 2005
 
 hist_time_2: &hist_cpm_2
-  start_year: 2000
-  end_year: 2009
+  start_year: 1998
+  end_year: 2007
 
 hist_time: &hist_time
-  start_year: 2000
-  end_year: 2009
+  start_year: 1995
+  end_year: 2014
 
 fut_cpm: &fut_cpm
-  start_year: 2090
-  end_year: 2099
+  start_year: 2041
+  end_year: 2050
 
 fut_cpm_2: &fut_cpm_2
-  start_year: 2090
-  end_year: 2099
+  start_year: 2040
+  end_year: 2049
 
 fut_time: &fut_time
-  start_year: 2090
-  end_year: 2099
+  start_year: 2041
+  end_year: 2060
 
 preprocessors:
   regrid_GCM: &regrid_GCM
@@ -350,175 +350,340 @@ preprocessors:
     #   mask_out: sea
 
 base_vars:
-  var: &var
-    # CHANGE VARIABLE HERE
-    short_name: pr
-
   vars:
     var_hist: &var_hist
-      <<: *var
       <<: *hist_time
       exp: [historical, rcp85]
 
     var_hist_cmp: &var_hist_cpm
-      <<: *var
       <<: *hist_cpm
       exp: [historical, rcp85]
 
     var_hist_cmp_2: &var_hist_cpm_2
-      <<: *var
       <<: *hist_cpm_2
       exp: [historical, rcp85]
 
     var_rcp85: &var_rcp85
-      <<: *var
       <<: *fut_time
       exp: rcp85
 
     var_rcp85_cpm: &var_rcp85_cpm
-      <<: *var
       <<: *fut_cpm
       exp: rcp85
 
     var_rcp85_cpm_2: &var_rcp85_cpm_2
-      <<: *var
       <<: *fut_cpm_2
       exp: rcp85
 
     var_hist_CMIP6: &var_hist_CMIP6
-      <<: *var
       <<: *hist_time
       activity: CMIP
       exp: [historical, ssp585]
 
     var_SSP585: &var_SSP585
-      <<: *var
       <<: *fut_time
       exp: ssp585
 
 
+gridded_vars:
+  gridded_hist_CMIP5: &gh_CMIP5
+    <<: *var_hist
+    additional_datasets: *CMIP5
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CMIP5: &gf_CMIP5
+    <<: *var_rcp85
+    additional_datasets: *CMIP5
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_non-cmip5: &gh_nCMIP5
+    <<: *var_hist_cpm
+    ensemble: r14i1p1
+    additional_datasets: *non-cmip5
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_non-cmip5: &gf_nCMIP5
+    <<: *var_rcp85_cpm
+    ensemble: r13i1p1
+    additional_datasets: *non-cmip5
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CORDEX-EUR11: &gh_cdx
+    <<: *var_hist
+    additional_datasets: *CORDEX-EUR11
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CORDEX-EUR11: &gf_cdx
+    <<: *var_rcp85
+    additional_datasets: *CORDEX-EUR11
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CORDEX-EUR11_2: &gh_cdx2
+    <<: *var_hist_cpm
+    additional_datasets: *CORDEX-EUR11_2
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CORDEX-EUR11_2: &gf_cdx2
+    <<: *var_rcp85_cpm_2
+    additional_datasets: *CORDEX-EUR11_2
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CORDEX-EUR11_3: &gh_cdx3
+    <<: *var_hist_cpm
+    ensemble: r14i1p1
+    additional_datasets: *CORDEX-EUR11_3
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CORDEX-EUR11_3: &gf_cdx3
+    <<: *var_rcp85_cpm
+    ensemble: r13i1p1
+    additional_datasets: *CORDEX-EUR11_3
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CORDEX-EUR11_4: &gh_cdx4
+    <<: *var_hist_cpm
+    additional_datasets: *CORDEX-EUR11_4
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CORDEX-EUR11_4: &gf_cdx4
+    <<: *var_rcp85_cpm
+    additional_datasets: *CORDEX-EUR11_4
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CORDEX-REU25: &gh_cdx25
+    <<: *var_hist_cpm_2
+    additional_datasets: *CORDEX-REU25
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_CORDEX-REU25: &gf_cdx25
+    <<: *var_rcp85_cpm_2
+    additional_datasets: *CORDEX-REU25
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_cordex_cpm: &gh_cpm
+    <<: *var_hist_cpm
+    additional_datasets: *CORDEX-CPM
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_cordex_cpm: &gf_cpm
+    <<: *var_rcp85_cpm
+    additional_datasets: *CORDEX-CPM
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_cordex_cpm2: &gh_cpm2
+    <<: *var_hist_cpm
+    additional_datasets: *CORDEX-CPM2
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_cordex_cpm2: &gf_cpm2
+    <<: *var_rcp85_cpm_2
+    additional_datasets: *CORDEX-CPM2
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_cordex_cpm3: &gh_cpm3
+    <<: *var_hist_cpm
+    ensemble: r14i1p1
+    additional_datasets: *CORDEX-CPM3
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_cordex_cpm3: &gf_cpm3
+    <<: *var_rcp85_cpm
+    ensemble: r13i1p1
+    additional_datasets: *CORDEX-CPM3
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_cordex_cpm4: &gh_cpm4
+    <<: *var_hist_cpm_2
+    additional_datasets: *CORDEX-CPM4
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_cordex_cpm4: &gf_cpm4
+    <<: *var_rcp85_cpm_2
+    additional_datasets: *CORDEX-CPM4
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_UKCP-GCM: &gh_UKg
+    <<: *var_hist
+    additional_datasets: *UKCP-GCM
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_UKCP-GCM: &gf_UKg
+    <<: *var_rcp85
+    additional_datasets: *UKCP-GCM
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_UKCP-RCM: &gh_UKr
+    <<: *var_hist
+    additional_datasets: *UKCP-RCM
+    preprocessor: season_spatial_proc_GCM
+  gridded_rcp85_UKCP-RCM: &gf_UKr
+    <<: *var_rcp85
+    additional_datasets: *UKCP-RCM
+    preprocessor: season_spatial_proc_GCM
+  gridded_hist_CMIP6: &gh_CMIP6
+    <<: *var_hist_CMIP6
+    additional_datasets: *CMIP6
+    preprocessor: season_spatial_proc_GCM
+  gridded_SSP585_CMIP6: &gf_CMIP6
+    <<: *var_SSP585
+    additional_datasets: *CMIP6
+    preprocessor: season_spatial_proc_GCM
+
 diagnostics:
-  gridded_anoms:
-    description: Compute means and anomalies for each grid box
+  tas_anoms:
+    description: Compute means and anomalies for tas
     variables:
-      gridded_hist_CMIP5:
-        <<: *var_hist
-        additional_datasets: *CMIP5
-        preprocessor: season_spatial_proc_GCM
-      gridded_rcp85_CMIP5:
-        <<: *var_rcp85
-        additional_datasets: *CMIP5
-        preprocessor: season_spatial_proc_GCM
-      # gridded_hist_non-cmip5:
-      #   <<: *var_hist_cpm
-      #   ensemble: r14i1p1
-      #   additional_datasets: *non-cmip5
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_non-cmip5:
-      #   <<: *var_rcp85_cpm
-      #   ensemble: r13i1p1
-      #   additional_datasets: *non-cmip5
-      #   preprocessor: season_spatial_proc_GCM
-      gridded_hist_CORDEX-EUR11:
-        <<: *var_hist
-        additional_datasets: *CORDEX-EUR11
-        preprocessor: season_spatial_proc_GCM
-      gridded_rcp85_CORDEX-EUR11:
-        <<: *var_rcp85
-        additional_datasets: *CORDEX-EUR11
-        preprocessor: season_spatial_proc_GCM
-      # gridded_hist_CORDEX-EUR11_2:
-      #   <<: *var_hist_cpm
-      #   additional_datasets: *CORDEX-EUR11_2
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_CORDEX-EUR11_2:
-      #   <<: *var_rcp85_cpm_2
-      #   additional_datasets: *CORDEX-EUR11_2
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_CORDEX-EUR11_3:
-      #   <<: *var_hist_cpm
-      #   ensemble: r14i1p1
-      #   additional_datasets: *CORDEX-EUR11_3
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_CORDEX-EUR11_3:
-      #   <<: *var_rcp85_cpm
-      #   ensemble: r13i1p1
-      #   additional_datasets: *CORDEX-EUR11_3
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_CORDEX-EUR11_4:
-      #   <<: *var_hist_cpm
-      #   additional_datasets: *CORDEX-EUR11_4
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_CORDEX-EUR11_4:
-      #   <<: *var_rcp85_cpm
-      #   additional_datasets: *CORDEX-EUR11_4
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_CORDEX-REU25:
-      #   <<: *var_hist_cpm_2
-      #   additional_datasets: *CORDEX-REU25
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_CORDEX-REU25:
-      #   <<: *var_rcp85_cpm_2
-      #   additional_datasets: *CORDEX-REU25
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_cordex_cpm:
-      #   <<: *var_hist_cpm
-      #   additional_datasets: *CORDEX-CPM
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_cordex_cpm:
-      #   <<: *var_rcp85_cpm
-      #   additional_datasets: *CORDEX-CPM
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_cordex_cpm2:
-      #   <<: *var_hist_cpm
-      #   additional_datasets: *CORDEX-CPM2
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_cordex_cpm2:
-      #   <<: *var_rcp85_cpm_2
-      #   additional_datasets: *CORDEX-CPM2
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_cordex_cpm3:
-      #   <<: *var_hist_cpm
-      #   ensemble: r14i1p1
-      #   additional_datasets: *CORDEX-CPM3
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_cordex_cpm3:
-      #   <<: *var_rcp85_cpm
-      #   ensemble: r13i1p1
-      #   additional_datasets: *CORDEX-CPM3
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_cordex_cpm4:
-      #   <<: *var_hist_cpm_2
-      #   additional_datasets: *CORDEX-CPM4
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_cordex_cpm4:
-      #   <<: *var_rcp85_cpm_2
-      #   additional_datasets: *CORDEX-CPM4
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_UKCP-GCM:
-      #   <<: *var_hist
-      #   additional_datasets: *UKCP-GCM
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_UKCP-GCM:
-      #   <<: *var_rcp85
-      #   additional_datasets: *UKCP-GCM
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_hist_UKCP-RCM:
-      #   <<: *var_hist
-      #   additional_datasets: *UKCP-RCM
-      #   preprocessor: season_spatial_proc_GCM
-      # gridded_rcp85_UKCP-RCM:
-      #   <<: *var_rcp85
-      #   additional_datasets: *UKCP-RCM
-      #   preprocessor: season_spatial_proc_GCM
-      gridded_hist_CMIP6:
-        <<: *var_hist_CMIP6
-        additional_datasets: *CMIP6
-        preprocessor: season_spatial_proc_GCM
-      gridded_SSP585_CMIP6:
-        <<: *var_SSP585
-        additional_datasets: *CMIP6
-        preprocessor: season_spatial_proc_GCM
+      gh_CMIP5:
+        <<: *gh_CMIP5
+        short_name: tas
+      gf_CMIP5:
+        <<: *gf_CMIP5
+        short_name: tas
+      gh_nCMIP5:
+        <<: *gh_nCMIP5
+        short_name: tas
+      gf_nCMIP5:
+        <<: *gf_nCMIP5
+        short_name: tas
+      gh_cdx:
+        <<: *gh_cdx
+        short_name: tas
+      gf_cdx:
+        <<: *gf_cdx
+        short_name: tas
+      gh_cdx2:
+        <<: *gh_cdx2
+        short_name: tas
+      gf_cdx2:
+        <<: *gf_cdx2
+        short_name: tas
+      gh_cdx3:
+        <<: *gh_cdx3
+        short_name: tas
+      gf_cdx3:
+        <<: *gf_cdx3
+        short_name: tas
+      gh_cdx4:
+        <<: *gh_cdx4
+        short_name: tas
+      gf_cdx4:
+        <<: *gf_cdx4
+        short_name: tas
+      gh_cdx25:
+        <<: *gh_cdx25
+        short_name: tas
+      gf_cdx25:
+        <<: *gf_cdx25
+        short_name: tas
+      gh_cpm:
+        <<: *gh_cpm
+        short_name: tas
+      gf_cpm:
+        <<: *gf_cpm
+        short_name: tas
+      gh_cpm2:
+        <<: *gh_cpm2
+        short_name: tas
+      gf_cpm2:
+        <<: *gf_cpm2
+        short_name: tas
+      gh_cpm3:
+        <<: *gh_cpm3
+        short_name: tas
+      gf_cpm3:
+        <<: *gf_cpm3
+        short_name: tas
+      gh_cpm4:
+        <<: *gh_cpm4
+        short_name: tas
+      gf_cpm4:
+        <<: *gf_cpm4
+        short_name: tas
+      gh_UKg:
+        <<: *gh_UKg
+        short_name: tas
+      gf_UKg:
+        <<: *gf_UKg
+        short_name: tas
+      gh_UKr:
+        <<: *gh_UKr
+        short_name: tas
+      gf_UKr:
+        <<: *gf_UKr
+        short_name: tas
+      gh_CMIP6:
+        <<: *gh_CMIP6
+        short_name: tas
+      gf_CMIP6:
+        <<: *gf_CMIP6
+        short_name: tas
+    scripts:
+      main:
+        script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
+        domain: *region
+  pr_anoms:
+    description: Compute means and anomalies for pr
+    variables:
+      gh_CMIP5:
+        <<: *gh_CMIP5
+        short_name: pr
+      gf_CMIP5:
+        <<: *gf_CMIP5
+        short_name: pr
+      gh_nCMIP5:
+        <<: *gh_nCMIP5
+        short_name: pr
+      gf_nCMIP5:
+        <<: *gf_nCMIP5
+        short_name: pr
+      gh_cdx:
+        <<: *gh_cdx
+        short_name: pr
+      gf_cdx:
+        <<: *gf_cdx
+        short_name: pr
+      gh_cdx2:
+        <<: *gh_cdx2
+        short_name: pr
+      gf_cdx2:
+        <<: *gf_cdx2
+        short_name: pr
+      gh_cdx3:
+        <<: *gh_cdx3
+        short_name: pr
+      gf_cdx3:
+        <<: *gf_cdx3
+        short_name: pr
+      gh_cdx4:
+        <<: *gh_cdx4
+        short_name: pr
+      gf_cdx4:
+        <<: *gf_cdx4
+        short_name: pr
+      gh_cdx25:
+        <<: *gh_cdx25
+        short_name: pr
+      gf_cdx25:
+        <<: *gf_cdx25
+        short_name: pr
+      gh_cpm:
+        <<: *gh_cpm
+        short_name: pr
+      gf_cpm:
+        <<: *gf_cpm
+        short_name: pr
+      gh_cpm2:
+        <<: *gh_cpm2
+        short_name: pr
+      gf_cpm2:
+        <<: *gf_cpm2
+        short_name: pr
+      gh_cpm3:
+        <<: *gh_cpm3
+        short_name: pr
+      gf_cpm3:
+        <<: *gf_cpm3
+        short_name: pr
+      gh_cpm4:
+        <<: *gh_cpm4
+        short_name: pr
+      gf_cpm4:
+        <<: *gf_cpm4
+        short_name: pr
+      gh_UKg:
+        <<: *gh_UKg
+        short_name: pr
+      gf_UKg:
+        <<: *gf_UKg
+        short_name: pr
+      gh_UKr:
+        <<: *gh_UKr
+        short_name: pr
+      gf_UKr:
+        <<: *gf_UKr
+        short_name: pr
+      gh_CMIP6:
+        <<: *gh_CMIP6
+        short_name: pr
+      gf_CMIP6:
+        <<: *gf_CMIP6
+        short_name: pr
     scripts:
       main:
         script: ~/code/EUCP_WP5_Lines_of_Evidence/esmvaltool/diagnostics/spatial_plot.py
